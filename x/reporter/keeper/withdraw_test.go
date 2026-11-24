@@ -36,10 +36,11 @@ func mockIterateDelegatorRedelegations(
 		Once()
 }
 
-func TestFeefromReporterStake(t *testing.T) {
+func TestFeefromReporterStakeProportionalDebits(t *testing.T) {
 	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
-	fee := math.NewIntWithDecimal(100, 6)
+	fee := math.NewInt(5)
 	reporterAddr, selector1, selector2, selector3 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
 
 	err := k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
 	require.ErrorContains(t, err, "insufficient stake to pay fee")
@@ -49,147 +50,320 @@ func TestFeefromReporterStake(t *testing.T) {
 	require.NoError(t, k.Selectors.Set(ctx, selector3, types.NewSelection(reporterAddr, 1)))
 
 	delegations := []stakingtypes.Delegation{
-		{DelegatorAddress: selector1.String(), ValidatorAddress: sdk.ValAddress(reporterAddr).String(), Shares: math.LegacyNewDecWithPrec(100, 6)},
-		{DelegatorAddress: selector2.String(), ValidatorAddress: sdk.ValAddress(reporterAddr).String(), Shares: math.LegacyNewDecWithPrec(200, 6)},
-		{DelegatorAddress: selector3.String(), ValidatorAddress: sdk.ValAddress(reporterAddr).String(), Shares: math.LegacyNewDecWithPrec(300, 6)},
+		{DelegatorAddress: selector1.String(), ValidatorAddress: valAddr.String(), Shares: math.LegacyNewDec(1)},
+		{DelegatorAddress: selector2.String(), ValidatorAddress: valAddr.String(), Shares: math.LegacyNewDec(2)},
+		{DelegatorAddress: selector3.String(), ValidatorAddress: valAddr.String(), Shares: math.LegacyNewDec(3)},
 	}
 
 	validator := stakingtypes.Validator{
-		OperatorAddress: sdk.ValAddress(reporterAddr).String(),
+		OperatorAddress: valAddr.String(),
 		Status:          stakingtypes.Bonded,
-		Tokens:          math.NewIntWithDecimal(1000, 6),
-		DelegatorShares: math.LegacyNewDecWithPrec(600, 6),
+		Tokens:          math.NewInt(6),
+		DelegatorShares: math.LegacyNewDec(6),
 	}
-	tokenShare1 := validator.TokensFromShares(delegations[0].Shares).Quo(math.NewIntWithDecimal(1000, 6).ToLegacyDec()).Mul(fee.ToLegacyDec())
-	tokenShare2 := validator.TokensFromShares(delegations[1].Shares).Quo(math.NewIntWithDecimal(1000, 6).ToLegacyDec()).Mul(fee.ToLegacyDec())
-	tokenShare3 := validator.TokensFromShares(delegations[2].Shares).Quo(math.NewIntWithDecimal(1000, 6).ToLegacyDec()).Mul(fee.ToLegacyDec())
+	// capacities are [1, 2, 3] and the fee is 5; largest-remainder allocation
+	// must produce [1, 2, 2], not a decimal split that leaves a dust mismatch.
+	expectedAmounts := []math.Int{math.NewInt(1), math.NewInt(2), math.NewInt(2)}
+	delegators := []sdk.AccAddress{selector1, selector2, selector3}
 
-	sk.On("IterateDelegatorDelegations", ctx, selector1, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
-		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
-		sk.On("GetValidator", ctx, sdk.ValAddress(reporterAddr)).Return(validator, nil)
-		fn(delegations[0])
-	})
-	sk.On("IterateDelegatorDelegations", ctx, selector2, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
-		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
-		sk.On("GetValidator", ctx, sdk.ValAddress(reporterAddr)).Return(validator, nil)
-		fn(delegations[1])
-	})
-	sk.On("IterateDelegatorDelegations", ctx, selector3, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
-		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
-		sk.On("GetValidator", ctx, sdk.ValAddress(reporterAddr)).Return(validator, nil)
-		fn(delegations[2])
-	})
-	feeShare1, err := validator.SharesFromTokens(tokenShare1.TruncateInt())
-	require.NoError(t, err)
-	feeShare2, err := validator.SharesFromTokens(tokenShare2.TruncateInt())
-	require.NoError(t, err)
-	feeShare3, err := validator.SharesFromTokens(tokenShare3.TruncateInt())
+	// Discovery reads each validator once. The debit phase must read the
+	// validator and the live delegation again before every positive debit.
+	sk.On("GetValidator", ctx, valAddr).Return(validator, nil).Times(6)
+	for i, selector := range delegators {
+		sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+			fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+			fn(delegations[i])
+		})
+		sk.On("GetDelegation", ctx, selector, valAddr).Return(delegations[i], nil).Once()
+		sharesToUnbond, err := validator.SharesFromTokens(expectedAmounts[i])
+		require.NoError(t, err)
+		sk.On("Unbond", ctx, selector, valAddr, sharesToUnbond).Return(expectedAmounts[i], nil).Once()
+	}
 
-	require.NoError(t, err)
-	sk.On("Unbond", ctx, selector1, sdk.ValAddress(reporterAddr), feeShare1).Return(tokenShare1.TruncateInt(), nil)
-	sk.On("Unbond", ctx, selector2, sdk.ValAddress(reporterAddr), feeShare2).Return(tokenShare2.TruncateInt(), nil)
-	sk.On("Unbond", ctx, selector3, sdk.ValAddress(reporterAddr), feeShare3).Return(tokenShare3.TruncateInt(), nil)
-
-	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(99_999_999)))).Return(nil)
-	err = k.FeefromReporterStake(ctx, reporterAddr, math.NewIntWithDecimal(100, 6), []byte("hashId"), true)
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", fee))).Return(nil).Once()
+	err = k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
 	require.NoError(t, err)
 
-	feefromstake, err := k.FeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
+	tracker, err := k.FeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
 	require.NoError(t, err)
-	expected := tokenShare1.TruncateInt().Add(tokenShare2.TruncateInt()).Add(tokenShare3.TruncateInt())
-	require.Equal(t, expected, feefromstake.Total)
+	require.Equal(t, fee, tracker.Total)
+	var want []*types.TokenOriginInfo
+	for i, delegator := range delegators {
+		want = append(want, &types.TokenOriginInfo{
+			DelegatorAddress: delegator.Bytes(),
+			ValidatorAddress: valAddr.Bytes(),
+			Amount:           expectedAmounts[i],
+		})
+	}
+	require.ElementsMatch(t, want, tracker.TokenOrigins)
+	sk.AssertExpectations(t)
+	bk.AssertExpectations(t)
 }
 
-func TestFeefromReporterStakeFullyCoveredRecordsActualUnbondAmount(t *testing.T) {
+func TestFeefromReporterStakeRejectsNonExactUnbondAmount(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		actual math.Int
+	}{
+		{name: "under-debit", actual: math.NewInt(99)},
+		{name: "over-debit", actual: math.NewInt(101)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			k, sk, bk, _, _, ctx, _ := setupKeeper(t)
+			reporterAddr := sample.AccAddressBytes()
+			selector := sample.AccAddressBytes()
+			valAddr := sdk.ValAddress(sample.AccAddressBytes())
+			fee := math.NewInt(100)
+			require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 1)))
+
+			delegation := stakingtypes.Delegation{
+				DelegatorAddress: selector.String(),
+				ValidatorAddress: valAddr.String(),
+				Shares:           math.LegacyNewDec(1000),
+			}
+			validator := stakingtypes.Validator{
+				OperatorAddress: valAddr.String(),
+				Status:          stakingtypes.Bonded,
+				Tokens:          math.NewInt(2000),
+				DelegatorShares: math.LegacyNewDec(2000),
+			}
+			sharesToUnbond, err := validator.SharesFromTokens(fee)
+			require.NoError(t, err)
+
+			sk.On("GetValidator", ctx, valAddr).Return(validator, nil).Twice()
+			sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+				fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+				fn(delegation)
+			})
+			// Do not let the debit use the delegation passed to the iterator.
+			sk.On("GetDelegation", ctx, selector, valAddr).Return(delegation, nil).Once()
+			sk.On("Unbond", ctx, selector, valAddr, sharesToUnbond).Return(tc.actual, nil).Once()
+
+			err = k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
+			require.Error(t, err)
+			hasPaid, hasPaidErr := k.HasFeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
+			require.NoError(t, hasPaidErr)
+			require.False(t, hasPaid)
+			bk.AssertNotCalled(t, "SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			sk.AssertExpectations(t)
+			bk.AssertExpectations(t)
+		})
+	}
+}
+
+func TestFeefromReporterStakeRejectsFeeAboveTruncatedPositionValues(t *testing.T) {
+	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
+	reporterAddr := sample.AccAddressBytes()
+	selector1, selector2 := sample.AccAddressBytes(), sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
+	fee := math.NewInt(3)
+
+	require.NoError(t, k.Selectors.Set(ctx, selector1, types.NewSelection(reporterAddr, 1)))
+	require.NoError(t, k.Selectors.Set(ctx, selector2, types.NewSelection(reporterAddr, 1)))
+	// Each position is worth 3/2 loya, but D1 sums each position after
+	// truncation, so the reporter's capacity is 1 + 1, not 3.
+	validator := stakingtypes.Validator{
+		OperatorAddress: valAddr.String(),
+		Status:          stakingtypes.Bonded,
+		Tokens:          math.NewInt(3),
+		DelegatorShares: math.LegacyNewDec(2),
+	}
+	delegations := []stakingtypes.Delegation{
+		{DelegatorAddress: selector1.String(), ValidatorAddress: valAddr.String(), Shares: math.LegacyNewDec(1)},
+		{DelegatorAddress: selector2.String(), ValidatorAddress: valAddr.String(), Shares: math.LegacyNewDec(1)},
+	}
+	sk.On("GetValidator", ctx, valAddr).Return(validator, nil).Twice()
+	for i, selector := range []sdk.AccAddress{selector1, selector2} {
+		sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+			fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+			fn(delegations[i])
+		})
+	}
+
+	err := k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
+	require.ErrorContains(t, err, "insufficient stake to pay fee")
+	sk.AssertNotCalled(t, "GetDelegation", mock.Anything, mock.Anything, mock.Anything)
+	sk.AssertNotCalled(t, "Unbond", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	sk.AssertExpectations(t)
+	bk.AssertNotCalled(t, "SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	bk.AssertExpectations(t)
+}
+
+func TestFeefromReporterStakeLaterRoundDebitsWithoutTracking(t *testing.T) {
 	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
 	reporterAddr := sample.AccAddressBytes()
 	selector := sample.AccAddressBytes()
 	valAddr := sdk.ValAddress(sample.AccAddressBytes())
-	fee := math.NewInt(1000)
-	escrowedAmt := math.NewInt(999)
-
+	fee := math.NewInt(100)
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 1)))
 
 	delegation := stakingtypes.Delegation{
 		DelegatorAddress: selector.String(),
 		ValidatorAddress: valAddr.String(),
-		Shares:           math.LegacyNewDec(2000),
+		Shares:           math.LegacyNewDec(100),
 	}
 	validator := stakingtypes.Validator{
 		OperatorAddress: valAddr.String(),
 		Status:          stakingtypes.Bonded,
-		Tokens:          math.NewInt(2000),
-		DelegatorShares: math.LegacyNewDec(2000),
+		Tokens:          math.NewInt(100),
+		DelegatorShares: math.LegacyNewDec(100),
 	}
-	sharesToUnbond, err := validator.SharesFromTokens(fee)
-	require.NoError(t, err)
-
+	sk.On("GetValidator", ctx, valAddr).Return(validator, nil).Twice()
 	sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
 		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
 		fn(delegation)
 	})
-	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
-	sk.On("Unbond", ctx, selector, valAddr, sharesToUnbond).Return(escrowedAmt, nil)
-	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", escrowedAmt))).Return(nil)
+	sk.On("GetDelegation", ctx, selector, valAddr).Return(delegation, nil).Once()
+	sk.On("Unbond", ctx, selector, valAddr, delegation.Shares).Return(fee, nil).Once()
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", fee))).Return(nil).Once()
 
-	require.NoError(t, k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true))
-
-	tracker, err := k.FeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
+	require.NoError(t, k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), false))
+	hasPaid, err := k.HasFeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
 	require.NoError(t, err)
-	require.Equal(t, escrowedAmt, tracker.Total)
-	require.Len(t, tracker.TokenOrigins, 1)
-	require.Equal(t, escrowedAmt, tracker.TokenOrigins[0].Amount)
-
-	sum := math.ZeroInt()
-	for _, origin := range tracker.TokenOrigins {
-		sum = sum.Add(origin.Amount)
-	}
-	require.Equal(t, tracker.Total, sum)
+	require.False(t, hasPaid, "later-round debits must not create a round-one tracker")
 	sk.AssertExpectations(t)
 	bk.AssertExpectations(t)
 }
 
-func TestFeefromReporterStakeMultiplevalidators(t *testing.T) {
+func TestFeefromReporterStakeWalksMultipleValidatorsAndStopsAtTarget(t *testing.T) {
 	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
-	fee := math.NewIntWithDecimal(100, 6)
-	reporterAddr, selector := sample.AccAddressBytes(), sample.AccAddressBytes()
-
+	reporterAddr := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	valAddr1 := sdk.ValAddress(sample.AccAddressBytes())
+	valAddr2 := sdk.ValAddress(sample.AccAddressBytes())
+	fee := math.NewIntWithDecimal(75, 6)
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 2)))
-	// share with validator less than fee
-	delegations1 := []stakingtypes.Delegation{
-		{DelegatorAddress: reporterAddr.String(), ValidatorAddress: sdk.ValAddress(reporterAddr).String(), Shares: math.LegacyNewDecWithPrec(100, 6)},
-		{DelegatorAddress: selector.String(), ValidatorAddress: sdk.ValAddress(selector).String(), Shares: math.LegacyNewDecWithPrec(100, 6)},
-	}
 
-	validator1 := stakingtypes.Validator{Tokens: math.NewIntWithDecimal(50, 6), DelegatorShares: math.LegacyNewDecWithPrec(100, 6), Status: stakingtypes.Bonded}
-	validator2 := stakingtypes.Validator{Tokens: math.NewIntWithDecimal(50, 6), DelegatorShares: math.LegacyNewDecWithPrec(100, 6), Status: stakingtypes.Bonded}
-	validators := []stakingtypes.Validator{validator1, validator2}
+	delegations := []stakingtypes.Delegation{
+		{
+			DelegatorAddress: selector.String(),
+			ValidatorAddress: valAddr1.String(),
+			Shares:           math.NewIntWithDecimal(100, 6).ToLegacyDec(),
+		},
+		{
+			DelegatorAddress: selector.String(),
+			ValidatorAddress: valAddr2.String(),
+			Shares:           math.NewIntWithDecimal(100, 6).ToLegacyDec(),
+		},
+	}
+	validators := []stakingtypes.Validator{
+		{
+			OperatorAddress: valAddr1.String(),
+			Tokens:          math.NewIntWithDecimal(50, 6),
+			DelegatorShares: math.NewIntWithDecimal(100, 6).ToLegacyDec(),
+			Status:          stakingtypes.Bonded,
+		},
+		{
+			OperatorAddress: valAddr2.String(),
+			Tokens:          math.NewIntWithDecimal(50, 6),
+			DelegatorShares: math.NewIntWithDecimal(100, 6).ToLegacyDec(),
+			Status:          stakingtypes.Bonded,
+		},
+	}
+	expectedAmounts := []math.Int{math.NewIntWithDecimal(50, 6), math.NewIntWithDecimal(25, 6)}
+	valAddrs := []sdk.ValAddress{valAddr1, valAddr2}
+
+	// Both positions are inspected during discovery and the validator is read
+	// again before each positive debit. The first debit exhausts position one;
+	// only the remaining 25 loya is taken from position two.
+	for i, valAddr := range valAddrs {
+		i, valAddr := i, valAddr
+		sk.On("GetValidator", ctx, valAddr).Return(validators[i], nil).Twice()
+		sk.On("GetDelegation", ctx, selector, valAddr).Return(delegations[i], nil).Once()
+		sharesToUnbond, err := validators[i].SharesFromTokens(expectedAmounts[i])
+		require.NoError(t, err)
+		sk.On("Unbond", ctx, selector, valAddr, sharesToUnbond).Return(expectedAmounts[i], nil).Once()
+	}
 	sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
 		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
-		for i, del := range delegations1 {
-			valAddr, _ := sdk.ValAddressFromBech32(del.ValidatorAddress)
-			sk.On("GetValidator", ctx, valAddr).Return(validators[i], nil)
-			sk.On("Unbond", ctx, selector, valAddr, del.Shares).Return(fee.QuoRaw(2), nil)
-			fn(del)
+		for _, delegation := range delegations {
+			fn(delegation)
 		}
 	})
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", fee))).Return(nil).Once()
 
-	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", fee))).Return(nil)
-	err := k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
+	require.NoError(t, k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true))
+	tracker, err := k.FeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
 	require.NoError(t, err)
+	require.Equal(t, fee, tracker.Total)
+	require.Len(t, tracker.TokenOrigins, 2)
+	require.Equal(t, valAddr1.Bytes(), tracker.TokenOrigins[0].ValidatorAddress)
+	require.Equal(t, expectedAmounts[0], tracker.TokenOrigins[0].Amount)
+	require.Equal(t, valAddr2.Bytes(), tracker.TokenOrigins[1].ValidatorAddress)
+	require.Equal(t, expectedAmounts[1], tracker.TokenOrigins[1].Amount)
+	sk.AssertExpectations(t)
+	bk.AssertExpectations(t)
+}
 
-	feefromstake, err := k.FeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
-	require.NoError(t, err)
-	expected := fee
-	require.Equal(t, expected, feefromstake.Total)
+func TestFeefromReporterStakeSkipsBondedValidatorWithInvalidExchangeRate(t *testing.T) {
+	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
+	reporterAddr := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	invalidValAddr := sdk.ValAddress(sample.AccAddressBytes())
+	validValAddr := sdk.ValAddress(sample.AccAddressBytes())
+	fee := math.NewInt(100)
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 2)))
 
-	err = k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
-	require.NoError(t, err)
+	invalidDelegation := stakingtypes.Delegation{
+		DelegatorAddress: selector.String(),
+		ValidatorAddress: invalidValAddr.String(),
+		Shares:           math.LegacyNewDec(100),
+	}
+	validDelegation := stakingtypes.Delegation{
+		DelegatorAddress: selector.String(),
+		ValidatorAddress: validValAddr.String(),
+		Shares:           math.LegacyNewDec(100),
+	}
+	invalidValidator := stakingtypes.Validator{
+		OperatorAddress: invalidValAddr.String(),
+		Status:          stakingtypes.Bonded,
+		Tokens:          math.NewInt(100),
+		// A bonded validator with zero delegator shares has no valid exchange rate.
+		DelegatorShares: math.LegacyZeroDec(),
+	}
+	validValidator := stakingtypes.Validator{
+		OperatorAddress: validValAddr.String(),
+		Status:          stakingtypes.Bonded,
+		Tokens:          math.NewInt(100),
+		DelegatorShares: math.LegacyNewDec(100),
+	}
 
-	feefromstake, err = k.FeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
+	sk.On("GetValidator", ctx, invalidValAddr).Return(invalidValidator, nil).Once()
+	sk.On("GetValidator", ctx, validValAddr).Return(validValidator, nil).Twice()
+	sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		fn(invalidDelegation)
+		fn(validDelegation)
+	})
+	sk.On("GetDelegation", ctx, selector, validValAddr).Return(validDelegation, nil).Once()
+	sk.On("Unbond", ctx, selector, validValAddr, validDelegation.Shares).Return(fee, nil).Once()
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", fee))).Return(nil).Once()
+
+	require.NoError(t, k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true))
+	tracker, err := k.FeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
 	require.NoError(t, err)
-	expected = fee.MulRaw(2)
-	require.Equal(t, expected, feefromstake.Total)
+	require.Equal(t, fee, tracker.Total)
+	require.Len(t, tracker.TokenOrigins, 1)
+	require.Equal(t, validValAddr.Bytes(), tracker.TokenOrigins[0].ValidatorAddress)
+	require.Equal(t, fee, tracker.TokenOrigins[0].Amount)
+	sk.AssertNotCalled(t, "GetDelegation", ctx, selector, invalidValAddr)
+	sk.AssertNotCalled(t, "Unbond", ctx, selector, invalidValAddr, mock.Anything)
+	sk.AssertExpectations(t)
+	bk.AssertExpectations(t)
+}
+
+func TestFeefromReporterStakeZeroFeeRecordsEmptyReceipt(t *testing.T) {
+	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
+	payer := sample.AccAddressBytes()
+	hashID := []byte("zero-fee")
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins()).Return(nil).Once()
+	require.NoError(t, k.FeefromReporterStake(ctx, payer, math.ZeroInt(), hashID, true))
+	receipt, err := k.FeePaidFromStakeByPayer(ctx, hashID, payer)
+	require.NoError(t, err)
+	require.True(t, receipt.Total.IsZero())
+	require.Empty(t, receipt.TokenOrigins)
+	sk.AssertNotCalled(t, "Unbond", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	bk.AssertExpectations(t)
 }
 
 func TestEscrowReporterStake(t *testing.T) {

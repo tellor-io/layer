@@ -171,7 +171,7 @@ func (s *IntegrationTestSuite) TestEscrowSlashShortfallOnSkewedValidatorPartialD
 	s.NoError(err, "partial deduction must leave the remainder of the delegation in place")
 }
 
-func (s *IntegrationTestSuite) TestFeeFromReporterStakeOriginsSumExceedsTotal() {
+func (s *IntegrationTestSuite) TestFeeFromReporterStakeTracksExactPayment() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	ctx := s.Setup.Ctx
 	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
@@ -206,6 +206,7 @@ func (s *IntegrationTestSuite) TestFeeFromReporterStakeOriginsSumExceedsTotal() 
 	tracked, err := s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(ctx, hashId, reporter)
 	s.NoError(err)
 
+	s.Equal(fee, received, "the full requested fee must reach the dispute module")
 	s.Equal(tracked.Total, received, "fee tracker Total must equal coins the dispute module received")
 
 	sum := math.ZeroInt()

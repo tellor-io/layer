@@ -949,8 +949,8 @@ func (s *IntegrationTestSuite) TestFromBondPayerFundsTwiceThenResize() {
 	s.Equal(disputetypes.Prevote, partial.DisputeStatus)
 	firstTracked, err := s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(s.Setup.Ctx, partial.HashId, bondPayer)
 	s.NoError(err)
-	s.True(firstTracked.Total.Sub(first).Abs().LTE(math.NewInt(2)))
-	s.NotEmpty(firstTracked.TokenOrigins)
+	s.Equal(first, firstTracked.Total)
+	s.Require().Len(firstTracked.TokenOrigins, 1)
 
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	_, err = msgServer.AddFeeToDispute(s.Setup.Ctx, &disputetypes.MsgAddFeeToDispute{
@@ -962,8 +962,11 @@ func (s *IntegrationTestSuite) TestFromBondPayerFundsTwiceThenResize() {
 	s.NoError(err)
 	secondTracked, err := s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(s.Setup.Ctx, partial.HashId, bondPayer)
 	s.NoError(err)
-	s.True(secondTracked.Total.Sub(first.Add(second)).Abs().LTE(math.NewInt(4)))
-	s.Greater(len(secondTracked.TokenOrigins), len(firstTracked.TokenOrigins))
+	s.Equal(first.Add(second), secondTracked.Total)
+	s.Require().Len(secondTracked.TokenOrigins, 1)
+	s.Equal(bondPayer.Bytes(), secondTracked.TokenOrigins[0].DelegatorAddress)
+	s.Equal(fx.vals[1].Bytes(), secondTracked.TokenOrigins[0].ValidatorAddress)
+	s.Equal(secondTracked.Total, secondTracked.TokenOrigins[0].Amount)
 
 	_, err = msgServer.AddFeeToDispute(s.Setup.Ctx, &disputetypes.MsgAddFeeToDispute{
 		Creator:     accountPayer.String(),
