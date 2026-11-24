@@ -144,6 +144,30 @@ func (_m *ReporterKeeper) FeeRefund(ctx context.Context, hashId []byte, payer ty
 	return r0, r1, r2
 }
 
+// FeePaidFromStakeByPayer provides a mock function with given fields: ctx, hashId, payer
+func (_m *ReporterKeeper) FeePaidFromStakeByPayer(ctx context.Context, hashId []byte, payer types.AccAddress) (reportertypes.DelegationsAmounts, error) {
+	ret := _m.Called(ctx, hashId, payer)
+
+	var r0 reportertypes.DelegationsAmounts
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, types.AccAddress) (reportertypes.DelegationsAmounts, error)); ok {
+		return rf(ctx, hashId, payer)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, types.AccAddress) reportertypes.DelegationsAmounts); ok {
+		r0 = rf(ctx, hashId, payer)
+	} else {
+		r0 = ret.Get(0).(reportertypes.DelegationsAmounts)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, types.AccAddress) error); ok {
+		r1 = rf(ctx, hashId, payer)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FeePaidFromStakeTotalByPayer provides a mock function with given fields: ctx, hashId, payer
 func (_m *ReporterKeeper) FeePaidFromStakeTotalByPayer(ctx context.Context, hashId []byte, payer types.AccAddress) (math.Int, error) {
 	ret := _m.Called(ctx, hashId, payer)
@@ -290,6 +314,37 @@ func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.A
 	}
 
 	return r0
+}
+
+// ReturnFeeExcess provides a mock function with given fields: ctx, hashId, payer, excess, kept
+func (_m *ReporterKeeper) ReturnFeeExcess(ctx context.Context, hashId []byte, payer types.AccAddress, excess math.Int, kept math.Int) (math.Int, math.Int, error) {
+	ret := _m.Called(ctx, hashId, payer, excess, kept)
+
+	var r0 math.Int
+	var r1 math.Int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, types.AccAddress, math.Int, math.Int) (math.Int, math.Int, error)); ok {
+		return rf(ctx, hashId, payer, excess, kept)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, types.AccAddress, math.Int, math.Int) math.Int); ok {
+		r0 = rf(ctx, hashId, payer, excess, kept)
+	} else {
+		r0 = ret.Get(0).(math.Int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, types.AccAddress, math.Int, math.Int) math.Int); ok {
+		r1 = rf(ctx, hashId, payer, excess, kept)
+	} else {
+		r1 = ret.Get(1).(math.Int)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, []byte, types.AccAddress, math.Int, math.Int) error); ok {
+		r2 = rf(ctx, hashId, payer, excess, kept)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // ReturnSlashedTokens provides a mock function with given fields: ctx, hashId, extraReturn

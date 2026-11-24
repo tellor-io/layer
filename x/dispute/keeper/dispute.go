@@ -125,6 +125,9 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		if err := k.SlashAndJailReporter(ctx, dispute.InitialEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
 			return err
 		}
+		if err := k.adjustDisputeFeeToCollectedSlash(ctx, &dispute); err != nil {
+			return err
+		}
 		// extend dispute end time by 3 days, 2 for voting and 1 to allow for more rounds
 		dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 		dispute.DisputeStatus = types.Voting
@@ -139,7 +142,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 			sdk.NewAttribute("disputer", msg.Creator),
 			sdk.NewAttribute("reporter", msg.DisputedReporter),
 			sdk.NewAttribute("dispute_category", msg.DisputeCategory.String()),
-			sdk.NewAttribute("total_fee", disputeFee.String()),
+			sdk.NewAttribute("total_fee", dispute.DisputeFee.String()),
 			sdk.NewAttribute("fee_paid", msg.Fee.Amount.String()),
 			sdk.NewAttribute("pay_from_bond", strconv.FormatBool(msg.PayFromBond)),
 			sdk.NewAttribute("dispute_id", strconv.FormatUint(disputeId, 10)),
