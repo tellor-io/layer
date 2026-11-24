@@ -63,6 +63,27 @@ func NewProposalHandler(logger log.Logger, valStore baseapp.ValidatorStore, appC
 	}
 }
 
+// perTxOverhead mirrors the per-tx envelope CometBFT's Txs.Validate counts when
+// summing a block's tx bytes: each tx is encoded as a protobuf Data.txs repeated
+// bytes field (1 tag byte + uvarint length prefix). 4 bytes bounds any tx under
+// 256 MB, far above the 1 MB max_tx_bytes CheckTx limit.
+const perTxOverhead int64 = 4
+
+// trimTxsToFit returns the longest prefix of txs whose summed size plus per-tx
+// envelope overhead stays within budget. A non-positive budget drops every tx.
+// Order is preserved and a tx that doesn't fit stops the scan, so mempool
+// priority is never reordered (same semantics as baseapp's default preparer).
+func trimTxsToFit(txs [][]byte, budget int64) [][]byte {
+	var total int64
+	for i, tx := range txs {
+		total += int64(len(tx)) + perTxOverhead
+		if total > budget {
+			return txs[:i]
+		}
+	}
+	return txs
+}
+
 func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 	maxValidators, err := h.GetMaxValidators(ctx)
 	if err != nil {
@@ -76,7 +97,9 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 			"max_validators", maxValidators)
 		return nil, errors.New("number of votes exceeds max validators")
 	}
-	proposalTxs := req.Txs
+	// The reaper may offer more bytes than the block budget allows; trim from
+	// the back (dropped txs stay in the mempool and are re-offered next block).
+	proposalTxs := trimTxsToFit(req.Txs, req.MaxTxBytes)
 
 	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
 		err = baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
@@ -118,7 +141,17 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 			return nil, errors.New("failed to encode injected vote extension tx")
 		}
 
-		proposalTxs = append([][]byte{bz}, proposalTxs...)
+		// The injected VE tx is mandatory and goes first; reserve its bytes
+		// (plus its envelope) out of the proposer budget before trimming the
+		// reaped txs from the back. Without this, a full mempool made the
+		// proposal oversized and CometBFT's Txs.Validate panicked receiveRoutine
+		// on every receiver (full-mempool chain halt).
+		veBudget := req.MaxTxBytes - int64(len(bz)) - perTxOverhead
+		if veBudget <= 0 {
+			h.logger.Error("PrepareProposalHandler: injected VE tx alone exceeds MaxTxBytes",
+				"ve_size", len(bz), "max_tx_bytes", req.MaxTxBytes)
+		}
+		proposalTxs = append([][]byte{bz}, trimTxsToFit(req.Txs, veBudget)...)
 	}
 
 	return &abci.ResponsePrepareProposal{

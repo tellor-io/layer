@@ -387,6 +387,159 @@ func (s *ProposalHandlerTestSuite) TestProcessProposalHandler() {
 	require.NotNil(res)
 }
 
+// prepareFixture wires mocks and returns a ctx + ExtendedCommitInfo suitable
+// for calling PrepareProposalHandler at height 3 (VE enabled at height 1).
+func (s *ProposalHandlerTestSuite) prepareFixture() (sdk.Context, abcitypes.ExtendedCommitInfo) {
+	require := s.Require()
+	bk := s.bridgeKeeper
+	sk := s.stakingKeeper
+
+	pubKey, privKey, consAddr, _ := testutils.GenerateProposer(s.T())
+	sigA, sigB, evmAddr := testutils.GenerateSignatures(s.T())
+
+	sk.On("GetParams", mock.Anything).Return(stakingtypes.Params{
+		MaxValidators: 100,
+	}, nil)
+
+	ve := app.BridgeVoteExtension{
+		OracleAttestations: []app.OracleAttestation{
+			{
+				Attestation: []byte("attestation"),
+				Snapshot:    []byte("snapshot"),
+			},
+		},
+		InitialSignature: app.InitialSignature{
+			SignatureA: sigA,
+			SignatureB: sigB,
+		},
+		ValsetSignature: app.BridgeValsetSignature{
+			Signature: []byte("valSetSignature"),
+			Timestamp: uint64(s.ctx.BlockTime().Unix()),
+		},
+	}
+	veBz, err := json.Marshal(ve)
+	require.NoError(err)
+
+	_, _, sig, err := testutils.SignCVE(veBz, 2, 2, privKey)
+	require.NoError(err)
+
+	localLastCommit := abcitypes.ExtendedCommitInfo{
+		Votes: []abcitypes.ExtendedVoteInfo{
+			{
+				Validator: abcitypes.Validator{
+					Address: consAddr.Bytes(),
+					Power:   1000000000000,
+				},
+				VoteExtension:      veBz,
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
+				ExtensionSignature: sig,
+			},
+		},
+		Round: 2,
+	}
+
+	lastCommit := abcitypes.CommitInfo{
+		Round: 2,
+		Votes: []abcitypes.VoteInfo{
+			{
+				Validator: abcitypes.Validator{
+					Address: consAddr.Bytes(),
+					Power:   1000000000000,
+				},
+				BlockIdFlag: cmtproto.BlockIDFlagCommit,
+			},
+		},
+	}
+
+	ctx := s.ctx.WithBlockHeight(3)
+	ctx = ctx.WithCometInfo(baseapp.NewBlockInfo(nil, nil, nil, lastCommit))
+	ctx = ctx.WithHeaderInfo(coreheader.Info{
+		Height:  3,
+		ChainID: "layer",
+	})
+
+	validPubKey := cmtprotocrypto.PublicKey{
+		Sum: &cmtprotocrypto.PublicKey_Ed25519{
+			Ed25519: pubKey,
+		},
+	}
+	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), gomock.Any()).Return(validPubKey, nil).AnyTimes()
+
+	bk.On("EVMAddressFromSignatures", ctx, sigA, sigB, consAddr.String()).Return(evmAddr, nil)
+	bk.On("GetEVMAddressByOperator", ctx, consAddr.String()).Return(nil, errors.New("error"))
+	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
+		OperatorAddress: consAddr.String(),
+	}, nil)
+
+	return ctx, localLastCommit
+}
+
+// TestPrepareProposalTrimsFullMempool is the full-mempool chain-halt regression:
+// reaped tx bytes exceed MaxTxBytes, so the proposal must be trimmed and stay
+// inside CometBFT's own accounting (per-tx size + 4-byte envelope).
+func (s *ProposalHandlerTestSuite) TestPrepareProposalTrimsFullMempool() {
+	require := s.Require()
+
+	ctx, localLastCommit := s.prepareFixture()
+
+	fatTxs := make([][]byte, 20) // 20 × 900 B = 18 KB > 10 KB budget
+	for i := range fatTxs {
+		fatTxs[i] = make([]byte, 900)
+	}
+
+	req := abcitypes.RequestPrepareProposal{
+		Txs:             fatTxs,
+		Height:          3,
+		MaxTxBytes:      10_000,
+		LocalLastCommit: localLastCommit,
+	}
+
+	res, err := s.proposalHandler.PrepareProposalHandler(ctx, &req)
+	require.NoError(err)
+	require.NotNil(res)
+
+	// Trimmed, and VE tx kept first.
+	require.Greater(len(res.Txs), 1)
+	require.Less(len(res.Txs), len(fatTxs)+1)
+	var veTx app.VoteExtTx
+	require.NoError(json.Unmarshal(res.Txs[0], &veTx))
+
+	// CometBFT Txs.Validate accounting: len(tx) + per-tx proto envelope.
+	var total int64
+	for _, tx := range res.Txs {
+		total += int64(len(tx)) + 4
+	}
+	require.LessOrEqual(total, req.MaxTxBytes)
+
+	// Kept txs are an unmodified prefix of the reaped txs (no reordering).
+	for i, tx := range res.Txs[1:] {
+		require.Equal(fatTxs[i], tx)
+	}
+}
+
+// TestPrepareProposalKeepsVEWhenBudgetTooSmall: the VE tx is mandatory
+// (ProcessProposal rejects blocks without it), so it survives alone even when
+// MaxTxBytes cannot fit it.
+func (s *ProposalHandlerTestSuite) TestPrepareProposalKeepsVEWhenBudgetTooSmall() {
+	require := s.Require()
+
+	ctx, localLastCommit := s.prepareFixture()
+
+	req := abcitypes.RequestPrepareProposal{
+		Txs:             [][]byte{make([]byte, 900)},
+		Height:          3,
+		MaxTxBytes:      1,
+		LocalLastCommit: localLastCommit,
+	}
+
+	res, err := s.proposalHandler.PrepareProposalHandler(ctx, &req)
+	require.NoError(err)
+	require.NotNil(res)
+	require.Len(res.Txs, 1)
+	var veTx app.VoteExtTx
+	require.NoError(json.Unmarshal(res.Txs[0], &veTx))
+}
+
 func (s *ProposalHandlerTestSuite) TestProcessProposalHandler_EmptyTxs() {
 	require := s.Require()
 	p := s.proposalHandler
