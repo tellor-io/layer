@@ -29,6 +29,8 @@ Ref: https://keepachangelog.com/en/1.0.0/ and https://github.com/cosmos/cosmos-s
 
 ### State Machine Breaking
 
+* (x/dispute, x/reporter) Amend #1101 to collect bonded fees exactly, record the recovered round-one fee at funding, and settle each payer through `WithdrawFeeRefund`, including excess on AGAINST. Appeals use the retained fee with a one-loya minimum. Execution burns the odd loya when splitting the voter reserve. Ship both changes in the same coordinated upgrade. [Activation checks](adr/adr1011%20-%20dispute%20round%20fees.md#coordinated-upgrade)
+
 * (x/oracle) Persist the live cycle-list query data so `GetCurrentQueryInCycleList` no longer indexes `GetCyclelist()[Peek()]`. Oracle consensus version 6 backfills prefix 47. Fixes halt after `MsgUpdateCyclelist` shrinks the list (v6.1.8).
 * (x/oracle) Remove `MsgBatchSubmitValue`, `SubmitValueItem`, and `MsgUpdateMaxBatchSize`. Oracle consensus version 5 deletes leftover `MaxBatchSize` store bytes. Reporters submit values with `MsgSubmitValue` only (v6.1.7).
 

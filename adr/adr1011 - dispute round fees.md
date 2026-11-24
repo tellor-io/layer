@@ -7,37 +7,48 @@
 ## Changelog
 
 - 2026-06-10: initial version
+- 2026-11-24: retained fee, payer settlement and appeal pricing
 
-## Context
+## Round one
 
-A dispute can go through more than one round. Round 1 is the main dispute. If a round does not reach quorum someone can push it to another round by paying a fee, and that fee doubles every round. The chain caps this at 5 rounds.
+The opening quote `P` is the slash calculated from the report and dispute category. Payers can contribute cash or bonded stake until the quote is fully funded. A bonded contribution debits exactly the accepted amount. Each position contributes at most its individually floored value. Collection fails atomically if the split cannot be collected at live exchange rates. A first-round receipt lists positive origins from the latest debit first, then earlier origins. Matching delegator and validator pairs share one entry. There is no fixed limit on distinct pairs.
 
-This ADR is about what the fee is for each round and what happens to it.
+Escrow records the reporter principal actually recovered, `C`. If a positive quote recovers nothing, the transaction fails. If escrow recovers less than the quote, the retained fee `F` becomes the amount recovered. Otherwise the fee stays at the quote. Funding records the retained fee and its burn allocation, `b = floor(F / 20)`. The opening quote, gross contributions and bonded receipts stay on record. Until claimed, bonded excess is outside the owner's stake. It earns no staking rewards and other disputes cannot escrow it.
 
-Round 1's fee is refundable. You pay the dispute fee, which is the same as the slash amount. If the dispute resolves support you get your fee back minus a small burn and you also get the reporter's slashed tokens. If it resolves invalid you just get your fee back minus the burn. If it resolves against you the reporter gets your fee. So the round 1 fee comes back to you unless you lose the dispute.
+## Settlement
 
-Rounds 2 and up are different. The fee you pay to start another round is not refundable to anyone. It is a burn. The whole fee gets consumed, half of it is actually burned and half goes to the voters of the dispute (if no users or reporters voted in any round, the voter half is burned as well). The only thing that is ever refundable is the round 1 fee.
+Anyone can call `WithdrawFeeRefund` for a round-one payer. After an appeal, use the final executed round ID. The calculation uses the payer's gross contribution `g` and the round-one quote. Each leg rounds down independently to whole loya. The module accumulates fractions in millionths of a loya and burns whole loya as they accrue.
 
-The fee for each extra round starts at 5% of the slash amount and doubles each round. So round 2 is 10% of the slash, round 3 is 20%, round 4 is 40%, round 5 is 80%, capped at 100%. It gets expensive fast on purpose.
+| Outcome | Fee returned to its payment source | Reporter principal |
+| --- | --- | --- |
+| Failed before voting | Gross contribution, limited to the available receipt for bond | None |
+| INVALID | `floor(g × (P − b) / P)` | Returned to the disputed reporter's origins |
+| SUPPORT | `floor(g × (P − b) / P)` | `floor(g × C / P)` returned through staking for the named payer |
+| AGAINST | `floor(g × (P − F) / P)` when `F < P`. When `F = P`, the query shows zero and withdrawal returns an error | The reporter's origins receive `C + F − b` |
 
-Why it works this way:
+The corresponding no-quorum majority follows the same rule. An empty round pays zero on INVALID and SUPPORT. A successful claim consumes the payer row once, including a share that rounds to zero. The query `ClaimableDisputeRewards` shows both legs together. Historical bonded fee returns account for the amount actually collected. Payer-keyed receipts take precedence over the historical hash-only lookup.
 
-If a dispute is extended to multiple rounds, the escalating fee does two things:
+For a 100-loya quote and 60 loya recovered, the fee is 60 and the round-one allocation is 3. On AGAINST the reporter receives 117. Payers who contributed 70 and 30 claim 28 and 12 through their respective payment sources. On INVALID and SUPPORT their fee legs are 67 and 29, and their fractions together burn one loya. SUPPORT also allocates 42 and 18 from the reporter's principal.
 
-1. The doubling fee keeps anyone from dragging a dispute out forever. Every extra round costs a lot more than the last one.
-2. Half of the round fee goes to the voters to incentivize them to vote on the extra rounds. The fee grows as the rounds go up, so the reward for voting grows with it. Burning all of it instead would just destroy the tokens.
+## Appeals and voters
 
-The round 1 fee stays separate from all of this. It is the part that is actually at risk between the disputer and the reporter, and the final round decides what happens to it. The extra round fees are just the cost of asking for another vote.
+An unresolved dispute can be appealed up to round five. The offer minimum for opening a dispute applies only to a new dispute. Round `r` from 2 through 5 costs `max(1, min(F, floor(F × 2^(r−1) / 20)))` loya. These percentages are 10%, 20%, 40% and 80%. Even a zero-fee dispute costs one loya to appeal. Each appeal adds its price to `FeeTotal` and `BurnAmount`. The rising cost discourages extending a dispute. The voter reserve rewards participation across rounds.
 
+Upon execution, the allocation consists of the round-one burn allocation plus every appeal fee. If users or reporters voted in any round, reserve half the allocation rounded down for those voters and burn the rest. With no eligible votes, burn the full allocation.
 
-## Issues / Notes on Implementation
+## Coordinated upgrade
 
-The fee schedule for reference, with s as the slash amount (5% is s/20):
+Ship #1101 and this settlement change together. The upgrade applies the rules to funding, appeals, execution and claims processed from activation onward. A dispute partly funded before activation uses the new resize when funding completes. Use the stored amounts for earlier rounds, including rounds where #1101 already returned excess. Preserve voter reserves recorded before activation.
 
-- Round 1: pay s. This is the refundable fee. 5% is consumed (half burned, half reserved as the voter reward; all of it burned if no users or reporters voted), 95% is refundable.
-- Round 2: pay s/10 (10% of s). Fully consumed.
-- Round 3: pay s/5 (20%). Fully consumed.
-- Round 4: pay 2s/5 (40%). Fully consumed.
-- Round 5: pay 4s/5 (80%). Fully consumed.
+For each target chain, use the last committed height before activation (`H − 1`) for the following checks.
 
-Disputes are capped at 5 rounds.
+1. Identify the running binary and establish whether #1101's funding-time refunds ever ran. Record the chain ID, height, block hash and binary revision with the inventory.
+2. Group disputes by first-round ID and follow every appeal to its final round. Include open and partially funded Prevote rounds, rounds awaiting execution, and failed or executed rounds with unpaid payer or voter claims. Distinguish each vote outcome and its no-quorum form. Check the voter records from every round.
+3. Reconcile cash payments, bonded receipts and their origins, remaining reporter principal, voter reserves and dust against their backing in the dispute module. Use the amounts still owed after earlier withdrawals. Identify receipts keyed by the dispute hash alone. Several payers may share one such receipt. A successful bonded claim can consume it, and an INVALID or SUPPORT claim can include backing attributed to another payer. Reconcile these rights individually. If #1101 ran, also verify the resulting delegations, validator shares, unbonding entries and staking pool balances.
+4. Activate prospectively without a store migration only when the affected rights and staking records are clean or reconciled. Hold activation on an unexplained difference.
+
+### Performance evidence before release
+
+Check mainnet and Palmito separately. On private copies with representative holdings, submit signed cash and multi-owner bonded claims under a finite gas budget justified by observed transactions and node and block limits. Include the two SUPPORT legs, resized AGAINST excess and a retry after cap overflow encounters a full unbonding queue. Record gas limits, gas used, outcomes and changes in balances.
+
+Compare the deployed release and the candidate on equivalent state, hardware, validator sets and consensus settings. Run repeated matched workloads using frequencies from a documented height range, including funding, claims and BeginBlock execution. Report deliberately exercised rare paths separately. For each network, record the builds, sample size, repeat variability and candidate-minus-baseline mean committed block interval. The permitted increase is at most **0.5 seconds on each network**. Record missing measurements explicitly. A keeper benchmark measures execution cost only.
