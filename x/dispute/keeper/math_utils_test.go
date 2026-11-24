@@ -15,6 +15,7 @@ func TestCalculateRefundAmount(t *testing.T) {
 		name         string
 		payerFee     math.Int
 		totalFeeRd1  math.Int
+		retainedFee  math.Int
 		expectedAmt  math.Int
 		expectedDust math.Int
 	}{
@@ -22,6 +23,7 @@ func TestCalculateRefundAmount(t *testing.T) {
 			name:        "full refund, single payer",
 			payerFee:    math.NewInt(1000),
 			totalFeeRd1: math.NewInt(1000),
+			retainedFee: math.NewInt(1000),
 			// Pot = 1000 - 50 = 950
 			// Share = 1.0 * 950 = 950
 			expectedAmt:  math.NewInt(950),
@@ -31,6 +33,7 @@ func TestCalculateRefundAmount(t *testing.T) {
 			name:        "2 even payers",
 			payerFee:    math.NewInt(500),
 			totalFeeRd1: math.NewInt(1000),
+			retainedFee: math.NewInt(1000),
 			// 95% of (500/1000) of 1000 = 475
 			expectedAmt:  math.NewInt(475),
 			expectedDust: math.ZeroInt(),
@@ -39,6 +42,7 @@ func TestCalculateRefundAmount(t *testing.T) {
 			name:         "zero fee",
 			payerFee:     math.ZeroInt(),
 			totalFeeRd1:  math.NewInt(100),
+			retainedFee:  math.NewInt(100),
 			expectedAmt:  math.ZeroInt(),
 			expectedDust: math.ZeroInt(),
 		},
@@ -46,6 +50,7 @@ func TestCalculateRefundAmount(t *testing.T) {
 			name:        "large numbers",
 			payerFee:    math.NewInt(123456789000000), // 123,456,789 trb
 			totalFeeRd1: math.NewInt(987654321000000), // 987,654,321 trb
+			retainedFee: math.NewInt(987654321000000),
 			// 95% of 12.5% of 987654321000000 = 117283949550000
 			expectedAmt:  math.NewInt(117283949550000),
 			expectedDust: math.ZeroInt(),
@@ -54,6 +59,7 @@ func TestCalculateRefundAmount(t *testing.T) {
 			name:        "dust",
 			payerFee:    math.NewInt(333),
 			totalFeeRd1: math.NewInt(1000),
+			retainedFee: math.NewInt(1000),
 			// 95% of (333/1000) of 1000 = 316.35
 			expectedAmt:  math.NewInt(316),
 			expectedDust: math.NewInt(350000), // 0.35 loya * 1e6
@@ -63,7 +69,7 @@ func TestCalculateRefundAmount(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			fmt.Println(tc.name)
-			amt, dust := keeper.CalculateRefundAmount(tc.payerFee, tc.totalFeeRd1)
+			amt, dust := keeper.CalculateRefundAmount(tc.payerFee, tc.totalFeeRd1, tc.retainedFee)
 			require.True(t, tc.expectedAmt.Equal(amt), "expected amount %s, got %s", tc.expectedAmt, amt)
 			require.True(t, tc.expectedDust.Equal(dust), "expected dust %s, got %s", tc.expectedDust, dust)
 		})
@@ -105,6 +111,58 @@ func TestCalculateActualStakeFeeRefundAmount(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := keeper.CalculateActualStakeFeeRefundAmount(tc.actualFee, tc.intendedFee, tc.intendedRefund)
 			require.True(t, tc.expected.Equal(got), "expected amount %s, got %s", tc.expected, got)
+		})
+	}
+}
+
+func TestCalculateAgainstRefundAmount(t *testing.T) {
+	tests := []struct {
+		name         string
+		payerFee     math.Int
+		totalFeeRd1  math.Int
+		retainedFee  math.Int
+		expectedAmt  math.Int
+		expectedDust math.Int
+	}{
+		{
+			name:         "cash share from resized quote",
+			payerFee:     math.NewInt(70),
+			totalFeeRd1:  math.NewInt(100),
+			retainedFee:  math.NewInt(60),
+			expectedAmt:  math.NewInt(28),
+			expectedDust: math.ZeroInt(),
+		},
+		{
+			name:         "fractional share keeps fixed precision dust",
+			payerFee:     math.NewInt(7),
+			totalFeeRd1:  math.NewInt(20),
+			retainedFee:  math.NewInt(15),
+			expectedAmt:  math.NewInt(1),
+			expectedDust: math.NewInt(750000),
+		},
+		{
+			name:         "full quote retains deployed error gate",
+			payerFee:     math.NewInt(70),
+			totalFeeRd1:  math.NewInt(100),
+			retainedFee:  math.NewInt(100),
+			expectedAmt:  math.ZeroInt(),
+			expectedDust: math.ZeroInt(),
+		},
+		{
+			name:         "zero quote returns before division",
+			payerFee:     math.ZeroInt(),
+			totalFeeRd1:  math.ZeroInt(),
+			retainedFee:  math.ZeroInt(),
+			expectedAmt:  math.ZeroInt(),
+			expectedDust: math.ZeroInt(),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			amt, dust := keeper.CalculateAgainstRefundAmount(tc.payerFee, tc.totalFeeRd1, tc.retainedFee)
+			require.True(t, tc.expectedAmt.Equal(amt), "expected amount %s, got %s", tc.expectedAmt, amt)
+			require.True(t, tc.expectedDust.Equal(dust), "expected dust %s, got %s", tc.expectedDust, dust)
 		})
 	}
 }
@@ -163,4 +221,8 @@ func TestCalculateReporterBondRewardAmount(t *testing.T) {
 			require.True(t, tc.expectedDust.Equal(dust), "expected dust %s, got %s", tc.expectedDust, dust)
 		})
 	}
+
+	amt, dust := keeper.CalculateReporterBondRewardAmount(math.NewInt(1), math.ZeroInt(), math.NewInt(1))
+	require.True(t, math.ZeroInt().Equal(amt))
+	require.True(t, math.ZeroInt().Equal(dust))
 }

@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	gomath "math"
-	"math/big"
 	"strconv"
 
 	layertypes "github.com/tellor-io/layer/types"
@@ -244,28 +243,20 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 		return fmt.Errorf("this dispute is expired, can't start new round %d", dispute.DisputeId)
 	}
 
-	if dispute.DisputeRound == 5 {
+	if dispute.DisputeRound == 0 {
+		return fmt.Errorf("invalid dispute round 0 for dispute %d", dispute.DisputeId)
+	}
+	if dispute.DisputeRound >= 5 {
 		return fmt.Errorf("can't start a new round for this dispute %d; max dispute rounds has been reached %d", dispute.DisputeId, dispute.DisputeRound)
 	}
-	// fee calculates a fee by scaling a base amount (fivePercent) exponentially based on the given round,
-	// doubling for each successive round.
-	fee := func(fivePercent math.Int, round int64) math.Int {
-		base := new(big.Int).Exp(big.NewInt(2), big.NewInt(round), nil)
-		return fivePercent.Mul(math.NewIntFromBigInt(base))
-	}
-	disputeSlashAmountDec := math.LegacyNewDecFromInt(dispute.SlashAmount)
-	fivePercentDec := disputeSlashAmountDec.Mul(math.LegacyNewDec(1)).Quo(math.LegacyNewDec(20))
-	fivePercent := fivePercentDec.TruncateInt()
-	roundFee := fee(fivePercent, int64(dispute.DisputeRound))
-	if roundFee.GT(dispute.SlashAmount) {
-		roundFee = dispute.SlashAmount
-	}
+	// Round 2 costs 10% of the retained fee, doubling through round 5.
+	roundFee := dispute.DisputeFee.MulRaw(1 << dispute.DisputeRound).QuoRaw(20)
+	roundFee = math.MaxInt(math.OneInt(), math.MinInt(dispute.DisputeFee, roundFee))
 
 	if msg.Fee.Amount.LT(roundFee) {
 		return fmt.Errorf("fee amount is less than amount required")
-	} else {
-		msg.Fee.Amount = roundFee
 	}
+	msg.Fee.Amount = roundFee
 
 	// Pay the dispute fee. Later-round fees are fully consumed (never refunded), so they
 	// must not be tracked as refundable first-round stake.

@@ -395,7 +395,7 @@ func (s *IntegrationTestSuite) TestRefundDisputeFeeFromBondUsesActualFundingAfte
 	payer := sample.AccAddressBytes()
 	actualFromBond := math.NewInt(999)
 	intendedFee := math.NewInt(1000)
-	intendedRefund, _ := disputekeeper.CalculateRefundAmount(intendedFee, intendedFee)
+	intendedRefund, _ := disputekeeper.CalculateRefundAmount(intendedFee, intendedFee, intendedFee)
 	expectedRefund := disputekeeper.CalculateActualStakeFeeRefundAmount(actualFromBond, intendedFee, intendedRefund)
 	hashId := []byte("fee-actual-after-burn")
 
@@ -420,7 +420,7 @@ func (s *IntegrationTestSuite) TestRefundDisputeFeeFromBondUsesActualFundingAfte
 	remainder, err := s.Setup.Disputekeeper.RefundDisputeFee(ctx, payer, disputetypes.PayerInfo{
 		Amount:   intendedFee,
 		FromBond: true,
-	}, intendedFee, hashId)
+	}, intendedFee, intendedFee, hashId)
 	s.NoError(err, "from-bond fee refund after burn must not exceed actual fee funding left in the dispute module")
 	s.True(remainder.IsZero())
 	after := s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(disputetypes.ModuleName), s.Setup.Denom).Amount

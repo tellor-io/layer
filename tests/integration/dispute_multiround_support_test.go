@@ -156,7 +156,7 @@ func (s *IntegrationTestSuite) TestMultiRoundSupportRefundsRoundOneStakeOnly() {
 	s.Equal(slashAmount.QuoRaw(20).Add(roundFee2), dispute.BurnAmount)
 
 	// round-1 payer: refunded 95% of the round-1 fee + the full slashed bond
-	expRefund, _ := keeper.CalculateRefundAmount(slashAmount, slashAmount)
+	expRefund, _ := keeper.CalculateRefundAmount(slashAmount, slashAmount, slashAmount)
 	bondedBefore, err := s.Setup.Stakingkeeper.TotalBondedTokens(s.Setup.Ctx)
 	s.NoError(err)
 	bal1Before := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer1, s.Setup.Denom)
@@ -608,7 +608,7 @@ func (s *IntegrationTestSuite) TestClaimableDisputeRewardsUsesFirstRoundFeePayer
 
 	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 2)
 	s.NoError(err)
-	refund, _ := keeper.CalculateRefundAmount(dispute.SlashAmount, dispute.SlashAmount)
+	refund, _ := keeper.CalculateRefundAmount(dispute.SlashAmount, dispute.SlashAmount, dispute.DisputeFee)
 	expectedClaimable := refund.Add(dispute.SlashAmount)
 
 	queryServer := keeper.NewQuerier(s.Setup.Disputekeeper)
@@ -682,7 +682,7 @@ func (s *IntegrationTestSuite) TestWorstCaseClaimableDisputeRewardsShowsCombined
 	expectedReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, claimant, 2)
 	s.NoError(err)
 	s.True(expectedReward.IsPositive(), "the claimant should have a real previous-round-only voter reward")
-	expectedRefund, _ := keeper.CalculateRefundAmount(finalDispute.SlashAmount, finalDispute.SlashAmount)
+	expectedRefund, _ := keeper.CalculateRefundAmount(finalDispute.SlashAmount, finalDispute.SlashAmount, finalDispute.DisputeFee)
 	expectedFeeRefund := expectedRefund.Add(finalDispute.SlashAmount)
 
 	queryServer := keeper.NewQuerier(s.Setup.Disputekeeper)

@@ -2,22 +2,18 @@ package keeper
 
 import (
 	"context"
-	"errors"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// WithdrawFeeRefund allows whoever paid the first round dispute fee to get refunded the fee if the
-// dispute does not get fully funded, or resolves to invalid or support.
-// If the dispute resolves to support, a first round fee payer also gets the disputed reporter's slashed tokens.
+// WithdrawFeeRefund settles the named round-one payer after funding fails or a vote executes.
 func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdrawFeeRefund) (*types.MsgWithdrawFeeRefundResponse, error) {
 	// should be ok to be called by anyone
 	feePayer, err := sdk.AccAddressFromBech32(msg.PayerAddress)
@@ -30,15 +26,8 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 		return nil, err
 	}
 
-	// get previous disputes
-	prevDisputes := dispute.PrevDisputeIds
-	firstRoundDisputeId := msg.Id
-	if len(prevDisputes) > 0 {
-		firstRoundDisputeId = prevDisputes[0]
-	}
-
-	// get dispute fee payer from rd 1
-	payerInfo, err := k.DisputeFeePayer.Get(ctx, collections.Join(firstRoundDisputeId, feePayer.Bytes()))
+	payerKey := collections.Join(firstRoundID(msg.Id, dispute), feePayer.Bytes())
+	payerInfo, err := k.DisputeFeePayer.Get(ctx, payerKey)
 	if err != nil {
 		return nil, err
 	}
@@ -46,61 +35,25 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 	if err != nil {
 		return nil, err
 	}
-	// handle failed underfunded dispute
 	if dispute.DisputeStatus == types.Failed {
-		err := k.RefundFailedDisputeFee(ctx, feePayer, payerInfo, dispute.HashId)
-		if err != nil {
+		if err := k.RefundFailedDisputeFee(ctx, feePayer, payerInfo, dispute.HashId); err != nil {
 			return nil, err
 		}
-
 	} else {
-		// check if vote executed
-		vote, err := k.Votes.Get(ctx, msg.Id)
+		claim, err := k.resolvedPayerClaim(ctx, msg.Id, dispute, feePayer, payerInfo)
 		if err != nil {
 			return nil, err
 		}
-
-		if !vote.Executed {
-			return nil, errors.New("vote not executed")
+		if err := k.returnPayerFee(ctx, feePayer, payerInfo, dispute.HashId, claim.fee); err != nil {
+			return nil, err
 		}
-
-		switch vote.VoteResult {
-		case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.SlashAmount, dispute.HashId)
-			if err != nil {
-				return nil, err
-			}
-			remainder = remainder.Add(fraction)
-		case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.SlashAmount, dispute.HashId)
-			if err != nil {
-				return nil, err
-			}
-
-			remainder = remainder.Add(fraction)
-
-			actualReporterBond, err := k.reporterKeeper.DisputedDelegationTotal(ctx, dispute.HashId)
-			if err != nil {
-				return nil, err
-			}
-			fraction, err = k.RewardReporterBondToFeePayers(ctx, feePayer, payerInfo, dispute.SlashAmount, actualReporterBond)
-			if err != nil {
-				return nil, err
-			}
-
-			remainder = remainder.Add(fraction)
-
-		default:
-			return nil, errors.New("invalid vote result")
+		if err := k.returnPayerPrincipal(ctx, feePayer, claim.principal); err != nil {
+			return nil, err
 		}
-
+		remainder = remainder.Add(claim.dust)
 	}
 
-	remainderDec := math.LegacyNewDecFromInt(remainder)
-	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
-	burnDustDec := remainderDec.Quo(powerReductionDec)
-	burnDust := burnDustDec.TruncateInt()
-
+	burnDust := remainder.Quo(layertypes.PowerReduction)
 	if !burnDust.IsZero() {
 		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, burnDust))); err != nil {
 			return nil, err
@@ -112,7 +65,7 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 		return nil, err
 	}
 
-	if err := k.DisputeFeePayer.Remove(ctx, collections.Join(firstRoundDisputeId, feePayer.Bytes())); err != nil {
+	if err := k.DisputeFeePayer.Remove(ctx, payerKey); err != nil {
 		return nil, err
 	}
 	return nil, nil

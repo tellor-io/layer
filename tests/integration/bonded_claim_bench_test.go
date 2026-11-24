@@ -96,7 +96,7 @@ func BenchmarkBondedFeeClaim(b *testing.B) {
 	origins[pairs-1].Amount = weight.SubRaw(1)
 	quote := weight.MulRaw(int64(pairs))
 	gross := quote.SubRaw(1)
-	refund, _ := disputekeeper.CalculateRefundAmount(gross, quote)
+	refund, _ := disputekeeper.CalculateRefundAmount(gross, quote, quote)
 	floors := math.ZeroInt()
 	for _, origin := range origins {
 		floors = floors.Add(origin.Amount.Mul(refund).Quo(gross))

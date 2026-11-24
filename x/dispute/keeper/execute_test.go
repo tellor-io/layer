@@ -98,7 +98,7 @@ func (k *KeeperTestSuite) TestRefundDisputeFee() {
 	k.reporterKeeper.On("FeePaidFromStakeTotalByPayer", k.ctx, []byte("hash"), feepayer1).Return(math.NewInt(800), nil)
 	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash"), feepayer1, math.NewInt(760)).Return(math.NewInt(760), math.ZeroInt(), nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(760)))).Return(nil)
-	dust, err := k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer1, feePayers[0], math.NewInt(1000), []byte("hash"))
+	dust, err := k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer1, feePayers[0], math.NewInt(1000), math.NewInt(1000), []byte("hash"))
 	k.NoError(err)
 	k.True(math.ZeroInt().Equal(dust))
 
@@ -106,12 +106,12 @@ func (k *KeeperTestSuite) TestRefundDisputeFee() {
 	k.reporterKeeper.On("FeePaidFromStakeTotalByPayer", k.ctx, []byte("short-hash"), shortPayer).Return(math.NewInt(799), nil)
 	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("short-hash"), shortPayer, math.NewInt(759)).Return(math.NewInt(759), math.ZeroInt(), nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(759)))).Return(nil)
-	dust, err = k.disputeKeeper.RefundDisputeFee(k.ctx, shortPayer, feePayers[0], math.NewInt(1000), []byte("short-hash"))
+	dust, err = k.disputeKeeper.RefundDisputeFee(k.ctx, shortPayer, feePayers[0], math.NewInt(1000), math.NewInt(1000), []byte("short-hash"))
 	k.NoError(err)
 	k.True(math.ZeroInt().Equal(dust))
 
 	k.bankKeeper.On("SendCoinsFromModuleToAccount", k.ctx, types.ModuleName, feepayer2, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(190)))).Return(nil)
-	dust, err = k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer2, feePayers[1], math.NewInt(1000), []byte("hash"))
+	dust, err = k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer2, feePayers[1], math.NewInt(1000), math.NewInt(1000), []byte("hash"))
 	k.NoError(err)
 	k.True(math.ZeroInt().Equal(dust))
 }

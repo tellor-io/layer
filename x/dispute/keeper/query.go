@@ -403,60 +403,30 @@ func (k Querier) ClaimableDisputeRewards(ctx context.Context, req *types.QueryCl
 		}
 	}
 
-	// Calculate Fee Refund
-	// Fee payer records are stored under the first-round dispute id only; resolve it the
-	// same way WithdrawFeeRefund does so queries for a final round still find the payer
-	firstRoundDisputeId := req.DisputeId
-	if len(dispute.PrevDisputeIds) > 0 {
-		firstRoundDisputeId = dispute.PrevDisputeIds[0]
+	payerInfo, err := k.DisputeFeePayer.Get(ctx, collections.Join(firstRoundID(req.DisputeId, dispute), addr.Bytes()))
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return nil, err
 	}
-	payerInfo, err := k.Keeper.DisputeFeePayer.Get(ctx, collections.Join(firstRoundDisputeId, addr.Bytes()))
 	if err == nil {
-		// Address is a fee payer
 		switch dispute.DisputeStatus {
 		case types.Failed:
-			// Failed dispute (underfunded) - full refund
 			feeRefundAmount = payerInfo.Amount
-			if payerInfo.FromBond {
-				actualFee, err := k.Keeper.reporterKeeper.FeePaidFromStakeTotalByPayer(ctx, dispute.HashId, addr)
+			if payerInfo.FromBond && payerInfo.Amount.IsPositive() {
+				actual, err := k.reporterKeeper.FeePaidFromStakeTotalByPayer(ctx, dispute.HashId, addr)
 				if err != nil {
 					return nil, err
 				}
-				feeRefundAmount = actualFee
+				feeRefundAmount = math.MinInt(payerInfo.Amount, actual)
 			}
-		case types.Resolved:
-			vote, err := k.Keeper.Votes.Get(ctx, req.DisputeId)
-			if err == nil && vote.Executed {
-				switch vote.VoteResult {
-				case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount)
-					if payerInfo.FromBond {
-						actualFee, err := k.Keeper.reporterKeeper.FeePaidFromStakeTotalByPayer(ctx, dispute.HashId, addr)
-						if err != nil {
-							return nil, err
-						}
-						refund = CalculateActualStakeFeeRefundAmount(actualFee, payerInfo.Amount, refund)
-					}
-					feeRefundAmount = feeRefundAmount.Add(refund)
-
-				case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount)
-					if payerInfo.FromBond {
-						actualFee, err := k.Keeper.reporterKeeper.FeePaidFromStakeTotalByPayer(ctx, dispute.HashId, addr)
-						if err != nil {
-							return nil, err
-						}
-						refund = CalculateActualStakeFeeRefundAmount(actualFee, payerInfo.Amount, refund)
-					}
-					feeRefundAmount = feeRefundAmount.Add(refund)
-
-					actualReporterBond, err := k.Keeper.reporterKeeper.DisputedDelegationTotal(ctx, dispute.HashId)
-					if err != nil {
-						return nil, err
-					}
-					reward, _ := CalculateReporterBondRewardAmount(payerInfo.Amount, dispute.SlashAmount, actualReporterBond)
-					feeRefundAmount = feeRefundAmount.Add(reward)
-				}
+		default:
+			claim, err := k.resolvedPayerClaim(ctx, req.DisputeId, dispute, addr, payerInfo)
+			switch {
+			case err == nil:
+				feeRefundAmount = claim.fee.Add(claim.principal)
+			case errors.Is(err, errVoteNotExecuted), errors.Is(err, errInvalidResult):
+				// No fee entitlement for this round.
+			default:
+				return nil, err
 			}
 		}
 	}

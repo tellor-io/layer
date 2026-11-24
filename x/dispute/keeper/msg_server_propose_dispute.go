@@ -43,9 +43,6 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 		return nil, errors.New("disputed report must be less than 21 days old")
 	}
 
-	if msg.Fee.Amount.LT(layer.OnePercent) {
-		return nil, types.ErrMinimumTRBrequired.Wrapf("fee %s doesn't meet minimum fee required", msg.Fee.Amount)
-	}
 	// return an error if the proposer attempts to create a dispute on themselves while paying from their bond
 	if msg.PayFromBond && strings.EqualFold(msg.Creator, msg.DisputedReporter) {
 		return nil, types.ErrSelfDisputeFromBond.Wrapf("proposer cannot pay from their bond when creating a dispute on themselves")
@@ -54,6 +51,9 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 	dispute, err := k.GetDisputeByReporter(ctx, *report, msg.DisputeCategory)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
+			if msg.Fee.Amount.LT(layer.OnePercent) {
+				return nil, types.ErrMinimumTRBrequired.Wrapf("fee %s doesn't meet minimum fee required", msg.Fee.Amount)
+			}
 			// event gets emitted in SetNewDispute
 			if err := k.Keeper.SetNewDispute(ctx, sender, *msg, report); err != nil {
 				return nil, err

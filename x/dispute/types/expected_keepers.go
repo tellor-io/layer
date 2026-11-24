@@ -55,10 +55,8 @@ type ReporterKeeper interface {
 	GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber uint64) (math.Int, error)
 	GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber uint64) (math.Int, error)
 	GetDelegatorTokensFromReporterAtBlock(ctx context.Context, delegator, reporter []byte, blockNumber uint64) (math.Int, error)
-	FeePaidFromStakeByPayer(ctx context.Context, hashId []byte, payer sdk.AccAddress) (reportertypes.DelegationsAmounts, error)
 	FeePaidFromStakeTotalByPayer(ctx context.Context, hashId []byte, payer sdk.AccAddress) (math.Int, error)
 	FeeRefund(ctx context.Context, hashId []byte, payer sdk.AccAddress, amt math.Int) (math.Int, math.Int, error)
-	ReturnFeeExcess(ctx context.Context, hashId []byte, payer sdk.AccAddress, excess, kept math.Int) (math.Int, math.Int, error)
 	UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr sdk.AccAddress, reportBlockNumber uint64, snapshot reportertypes.StakeSnapshotRef, disputeHashID []byte) error
 	GetSelectorForStake(ctx context.Context, selectorAddr sdk.AccAddress) (reportertypes.Selection, error)
 	// ReporterAtHeight returns the reporter this selector was on at blockHeight.

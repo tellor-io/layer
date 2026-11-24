@@ -48,29 +48,20 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		return errors.New("vote already executed")
 	}
 
-	// the burnAmount is round 1's 5% of the dispute fee plus all later-round fees, half
-	// of which is burned and the other half is distributed to the voters
-	disputeBurnAmountDec := math.LegacyNewDecFromInt(dispute.BurnAmount)
-	halfBurnAmountDec := disputeBurnAmountDec.Quo(math.LegacyNewDec(2))
-	halfBurnAmount := halfBurnAmountDec.TruncateInt()
-	voterReward := halfBurnAmount
-	// only user and reporter votes can claim through CalculateReward; team votes decide
-	// outcomes but earn nothing, so they must not cause a voter reward to be reserved
+	// Only users and reporters can claim a voter reward, including votes in prior rounds.
 	totalVoterPower, err := k.GetSumOfUserAndReporterVotesAllRounds(ctx, id)
 	if err != nil {
 		return err
 	}
-	if totalVoterPower.IsZero() {
-		// if no claim-eligible voters, burn the entire burnAmount
-		halfBurnAmount = dispute.BurnAmount
-		// non voters get nothing
-		voterReward = math.ZeroInt()
+	voterReward := math.ZeroInt()
+	if totalVoterPower.IsPositive() {
+		voterReward = dispute.BurnAmount.QuoRaw(2)
 	}
+	burnAmount := dispute.BurnAmount.Sub(voterReward)
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-		// burn half the burnAmount
-		if !halfBurnAmount.IsZero() {
-			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, halfBurnAmount))); err != nil {
+		if !burnAmount.IsZero() {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, burnAmount))); err != nil {
 				return err
 			}
 		}
@@ -90,9 +81,8 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			return err
 		}
 	case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-		// burn half the burnAmount
-		if !halfBurnAmount.IsZero() {
-			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, halfBurnAmount))); err != nil {
+		if !burnAmount.IsZero() {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, burnAmount))); err != nil {
 				return err
 			}
 		}
@@ -101,15 +91,13 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			return err
 		}
 	case types.VoteResult_AGAINST, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST:
-		// burn half the burnAmount
-		if !halfBurnAmount.IsZero() {
-			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, halfBurnAmount))); err != nil {
+		if !burnAmount.IsZero() {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, burnAmount))); err != nil {
 				return err
 			}
 		}
 		// refund the reporter's escrowed bond plus the dispute fee minus its 5% burn
-		fivePercentDec := dispute.DisputeFee.ToLegacyDec().Quo(math.LegacyNewDec(20))
-		disputeFeeMinusFivePercent := dispute.DisputeFee.Sub(fivePercentDec.TruncateInt())
+		disputeFeeMinusFivePercent := dispute.DisputeFee.Sub(dispute.DisputeFee.QuoRaw(20))
 		if err := k.ReturnSlashedTokens(ctx, dispute, disputeFeeMinusFivePercent); err != nil {
 			return err
 		}
@@ -142,41 +130,58 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	return nil
 }
 
-func (k Keeper) RefundFailedDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, hashId []byte) error {
-	fee := payerInfo.Amount
-
-	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, fee))
-	if !payerInfo.FromBond {
-		return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, feePayer, coins)
-	}
-
-	return k.ReturnFeetoStake(ctx, hashId, feePayer, fee)
+func (k Keeper) RefundFailedDisputeFee(ctx context.Context, payer sdk.AccAddress, info types.PayerInfo, hashID []byte) error {
+	// FeeRefund clamps a failed bonded payment to the available receipt.
+	return k.returnPayerFee(ctx, payer, info, hashID, info.Amount)
 }
 
-func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeeRd1 math.Int, hashId []byte) (math.Int, error) {
-	amtFixed6, remainder := CalculateRefundAmount(payerInfo.Amount, totalFeeRd1)
-
-	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtFixed6))
-	if !payerInfo.FromBond {
-		return remainder, k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, feePayer, coins)
-	}
-
-	actualFee, err := k.reporterKeeper.FeePaidFromStakeTotalByPayer(ctx, hashId, feePayer)
+func (k Keeper) RefundDisputeFee(ctx context.Context, payer sdk.AccAddress, info types.PayerInfo, quote, retainedFee math.Int, hashID []byte) (math.Int, error) {
+	fee, dust := CalculateRefundAmount(info.Amount, quote, retainedFee)
+	fee, err := k.backedFeeRefund(ctx, hashID, payer, info, fee)
 	if err != nil {
 		return math.Int{}, err
 	}
-	amtFixed6 = CalculateActualStakeFeeRefundAmount(actualFee, payerInfo.Amount, amtFixed6)
-	return remainder, k.ReturnFeetoStake(ctx, hashId, feePayer, amtFixed6)
+	return dust, k.returnPayerFee(ctx, payer, info, hashID, fee)
 }
 
-func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, reporterBond math.Int) (math.Int, error) {
-	amtFixed6, remainder := CalculateReporterBondRewardAmount(payerInfo.Amount, totalFeesPaid, reporterBond)
-
-	bondedAmt, unbondedAmt, err := k.reporterKeeper.AddAmountToStake(ctx, feePayer, amtFixed6)
-	if err != nil {
-		return math.Int{}, err
+func (k Keeper) returnPayerFee(ctx context.Context, payer sdk.AccAddress, info types.PayerInfo, hashID []byte, amount math.Int) error {
+	if info.FromBond {
+		// Empty rounds consume their empty receipt. An older shared receipt
+		// with a positive balance belongs to a different contribution.
+		if info.Amount.IsZero() {
+			tracked, err := k.reporterKeeper.FeePaidFromStakeTotalByPayer(ctx, hashID, payer)
+			if errors.Is(err, collections.ErrNotFound) {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+			if tracked.IsPositive() {
+				return nil
+			}
+		}
+		return k.ReturnFeetoStake(ctx, hashID, payer, amount)
 	}
-	return remainder, k.sendStakeReturnsToPools(ctx, bondedAmt, unbondedAmt)
+	if amount.IsZero() {
+		return nil
+	}
+	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, payer, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amount)))
+}
+
+func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, payer sdk.AccAddress, info types.PayerInfo, quote, reporterBond math.Int) (math.Int, error) {
+	principal, dust := CalculateReporterBondRewardAmount(info.Amount, quote, reporterBond)
+	return dust, k.returnPayerPrincipal(ctx, payer, principal)
+}
+
+func (k Keeper) returnPayerPrincipal(ctx context.Context, payer sdk.AccAddress, principal math.Int) error {
+	if principal.IsZero() {
+		return nil
+	}
+	bonded, unbonded, err := k.reporterKeeper.AddAmountToStake(ctx, payer, principal)
+	if err != nil {
+		return err
+	}
+	return k.sendStakeReturnsToPools(ctx, bonded, unbonded)
 }
 
 // GetSumOfUserAndReporterVotesAllRounds sums claim-eligible (user and reporter) vote

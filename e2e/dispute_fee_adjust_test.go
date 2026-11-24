@@ -21,9 +21,10 @@ import (
 // fee resized to the reporter stake a prior dispute already escrowed.
 //
 // The reporter bonds 1000 TRB and reports with power 1000. The disputer bonds
-// 2000 TRB, more than a 50 TRB minor fee plus the 1000 TRB major quote, because
-// that quote is taken from bond before the excess is returned. The minor dispute
-// keeps its quote. The major dispute keeps only the reporter stake it can escrow.
+// 2000 TRB, more than a 50 TRB minor fee plus the 1000 TRB major quote. The
+// minor dispute keeps its quote. The major dispute records only the reporter
+// stake it can escrow as its retained fee, while the gross quote stays in the
+// payer receipt for settlement.
 func TestCollectedSlashResizesRoundOneFee(t *testing.T) {
 	require := require.New(t)
 	cosmos.SetSDKConfig("tellor")
@@ -43,7 +44,7 @@ func TestCollectedSlashResizesRoundOneFee(t *testing.T) {
 
 	fundAmt := math.NewInt(10_000 * 1e6)
 	reporterStake := sdk.NewCoin("loya", math.NewInt(1_000*1e6))
-	// Bond must cover the minor fee and the full major quote before the excess returns.
+	// Bond must cover the minor fee and the full major quote.
 	disputerStake := sdk.NewCoin("loya", math.NewInt(2_000*1e6))
 	require.True(disputerStake.Amount.GT(minorFee.Add(majorQuote)))
 
@@ -125,10 +126,9 @@ func TestCollectedSlashResizesRoundOneFee(t *testing.T) {
 	major := disputeByCategory(t, disputes, "DISPUTE_CATEGORY_MAJOR")
 	require.Equal("DISPUTE_STATUS_VOTING", major.DisputeStatus)
 	require.Equal("1", major.DisputeRound)
-	require.Equal(major.FeeTotal, major.DisputeFee)
 	require.Equal(major.FeeTotal, major.SlashAmount)
 
-	retained := mustParseLoya(t, major.FeeTotal)
+	retained := mustParseLoya(t, major.DisputeFee)
 	removed := reporterAfterMinor.Sub(delegationTokens(t, ctx, chain, reporterAddr, val.ValAddr))
 	require.True(retained.IsPositive())
 	require.True(retained.LT(majorQuote), "major fee %s should be below the quote %s", retained, majorQuote)
@@ -137,13 +137,12 @@ func TestCollectedSlashResizesRoundOneFee(t *testing.T) {
 	burn := math.LegacyNewDecFromInt(retained).Quo(math.LegacyNewDec(20)).TruncateInt()
 	require.Equal(burn.String(), major.BurnAmount)
 
-	// The excess major fee is back on the disputer's delegation in this same transaction.
+	// Resizing changes only the dispute numbers; the gross major quote remains
+	// debited until the final claim.
 	dropped := disputerBefore.Sub(delegationTokens(t, ctx, chain, disputerAddr, val.ValAddr))
-	want := minorFee.Add(retained)
+	want := minorFee.Add(majorQuote)
 	require.True(dropped.Sub(want).Abs().LTE(math.OneInt()),
-		"disputer delegation fell %s, want minor fee plus retained major fee %s", dropped, want)
-	require.True(dropped.LT(minorFee.Add(majorQuote)),
-		"disputer delegation fell %s; minor fee plus the full major quote is %s", dropped, minorFee.Add(majorQuote))
+		"disputer delegation fell %s, want minor fee plus the full major quote %s", dropped, want)
 }
 
 // TestAdjustedMajorFeeSupportWithdraw settles the resized major dispute.
@@ -223,7 +222,8 @@ func TestAdjustedMajorFeeSupportWithdraw(t *testing.T) {
 
 	major := disputeByCategory(t, queryDisputes(t, ctx, val.Node), "DISPUTE_CATEGORY_MAJOR")
 	require.Equal("DISPUTE_STATUS_VOTING", major.DisputeStatus)
-	retained := mustParseLoya(t, major.FeeTotal)
+	require.Equal(major.FeeTotal, major.SlashAmount)
+	retained := mustParseLoya(t, major.DisputeFee)
 	removed := reporterAfterMinor.Sub(delegationTokens(t, ctx, chain, reporterAddr, val.ValAddr))
 	require.True(retained.IsPositive())
 	require.True(retained.LT(majorQuote))
@@ -246,13 +246,15 @@ func TestAdjustedMajorFeeSupportWithdraw(t *testing.T) {
 		"--keyring-dir", val.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 
-	// Support returns the kept fee minus its 5% burn, plus the escrowed reporter stake.
-	// The minor fee stays escrowed. start - minor + retained - burn.
+	// Support returns the gross fee leg minus its 5% burn, plus the escrowed
+	// reporter stake. The gross quote was debited at funding and the resize does
+	// not return the difference between the quote and retained fee.
+	// start - minor - quote + (quote - burn) + retained.
 	burn := math.LegacyNewDecFromInt(retained).Quo(math.LegacyNewDec(20)).TruncateInt()
 	want := disputerBefore.Sub(minorFee).Add(retained).Sub(burn)
 	got := delegationTokens(t, ctx, chain, disputerAddr, val.ValAddr).Add(unbondingTokens(t, ctx, chain, disputerAddr))
 	require.True(got.Sub(want).Abs().LTE(math.NewInt(5)),
-		"disputer stake %s, want %s (start %s, minor %s, retained %s, burn %s)", got, want, disputerBefore, minorFee, retained, burn)
+		"disputer stake %s, want %s (start %s, minor %s, quote %s, retained %s, burn %s)", got, want, disputerBefore, minorFee, majorQuote, retained, burn)
 	require.True(delegationTokens(t, ctx, chain, reporterAddr, val.ValAddr).Sub(reporterAfterMajor).Abs().LTE(math.OneInt()),
 		"reporter stake should stay escrowed after a support result")
 }

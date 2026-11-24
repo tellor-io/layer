@@ -6,30 +6,27 @@ import (
 	"cosmossdk.io/math"
 )
 
-// CalculateRefundAmount calculates the amount of the fee to be refunded to the payer
-// returns the amount to be refunded (amtFixed6) and the remainder (dust)
-func CalculateRefundAmount(payerFee, totalFeeRd1 math.Int) (math.Int, math.Int) {
-	payerFeeDec := payerFee.ToLegacyDec()
-	totalFeeRd1Dec := math.LegacyNewDecFromInt(totalFeeRd1)
+// CalculateRefundAmount splits the opening quote less the burn on the retained
+// round-one fee. Later-round fees are fully consumed and never enter this split.
+func CalculateRefundAmount(payerFee, quote, retainedFee math.Int) (math.Int, math.Int) {
+	return calculateProRataAmount(payerFee, quote, quote.Sub(retainedFee.QuoRaw(20)))
+}
 
-	// fivePercent = totalFeeRd1 / 20
-	fivePercentDec := totalFeeRd1.ToLegacyDec().Quo(math.LegacyNewDec(20))
-	fivePercent := fivePercentDec.TruncateInt()
+func CalculateAgainstRefundAmount(payerFee, quote, retainedFee math.Int) (math.Int, math.Int) {
+	return calculateProRataAmount(payerFee, quote, quote.Sub(retainedFee))
+}
 
-	// totalFeeMinusBurn = totalFeeRd1 - fivePercent
-	totalFeeMinusBurnDec := totalFeeRd1.Sub(fivePercent).ToLegacyDec()
+func CalculateReporterBondRewardAmount(payerFee, quote, reporterBond math.Int) (math.Int, math.Int) {
+	return calculateProRataAmount(payerFee, quote, reporterBond)
+}
 
-	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
-
-	// (payerFee / totalFeeRd1) * (totalFeeRd1 - burn)
-	// result scaled by PowerReduction
-	amtFixed12Dec := payerFeeDec.Mul(totalFeeMinusBurnDec).Mul(powerReductionDec).Quo(totalFeeRd1Dec)
-
-	amtFixed12 := amtFixed12Dec.TruncateInt()
-	remainder := amtFixed12.Mod(layertypes.PowerReduction)
-	amtFixed6 := amtFixed12.Quo(layertypes.PowerReduction)
-
-	return amtFixed6, remainder
+// Return whole loya and the fractional remainder at the module's dust precision.
+func calculateProRataAmount(payerFee, quote, pool math.Int) (math.Int, math.Int) {
+	if quote.IsZero() {
+		return math.ZeroInt(), math.ZeroInt()
+	}
+	scaled := payerFee.Mul(pool).Mul(layertypes.PowerReduction).Quo(quote)
+	return scaled.Quo(layertypes.PowerReduction), scaled.Mod(layertypes.PowerReduction)
 }
 
 func CalculateActualStakeFeeRefundAmount(actualFee, intendedFee, intendedRefund math.Int) math.Int {
@@ -41,25 +38,4 @@ func CalculateActualStakeFeeRefundAmount(actualFee, intendedFee, intendedRefund 
 		return math.ZeroInt()
 	}
 	return actualFee.Sub(burnShare)
-}
-
-// CalculateReporterBondRewardAmount calculates the portion of the reporter's bond to be rewarded to the payer
-// returns the amount to be rewarded (amtFixed6) and the remainder (dust)
-func CalculateReporterBondRewardAmount(payerFee, totalFeesPaid, reporterBond math.Int) (math.Int, math.Int) {
-	feeDec := math.LegacyNewDecFromInt(payerFee)
-	bondDec := math.LegacyNewDecFromInt(reporterBond)
-	totalFeesDec := math.LegacyNewDecFromInt(totalFeesPaid)
-	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
-
-	// (payerFee / totalFeesPaid) * reporterBond
-	// result scaled by PowerReduction
-	amtFixed12Dec := feeDec.Mul(bondDec).Mul(powerReductionDec).Quo(totalFeesDec)
-
-	amtFixed12 := amtFixed12Dec.TruncateInt()
-	amtFixed6Dec := amtFixed12Dec.Quo(powerReductionDec)
-	amtFixed6 := amtFixed6Dec.TruncateInt()
-
-	remainder := amtFixed12.Mod(layertypes.PowerReduction)
-
-	return amtFixed6, remainder
 }

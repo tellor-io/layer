@@ -648,6 +648,7 @@ func (s *KeeperTestSuite) TestClaimableDisputeRewardsQuery() {
 		DisputeStatus: types.Resolved,
 		HashId:        []byte("claimable_dispute4_support"),
 		SlashAmount:   math.NewInt(1000),
+		DisputeFee:    math.NewInt(1000),
 		FeeTotal:      math.NewInt(2000),
 	}
 	require.NoError(k.Disputes.Set(ctx, 4, dispute4))
@@ -679,6 +680,7 @@ func (s *KeeperTestSuite) TestClaimableDisputeRewardsQuery() {
 		BlockNumber:    200,
 		VoterReward:    math.NewInt(1000),
 		SlashAmount:    math.NewInt(1000),
+		DisputeFee:     math.NewInt(1000),
 		FeeTotal:       math.NewInt(2000),
 		HashId:         []byte("claimable_dispute5_combined"),
 	}
@@ -713,4 +715,76 @@ func (s *KeeperTestSuite) TestClaimableDisputeRewardsQuery() {
 	require.NoError(err)
 	require.True(resp.ClaimableAmount.RewardAmount.IsPositive())
 	require.True(resp.ClaimableAmount.FeeRefundAmount.IsPositive())
+}
+
+func (s *KeeperTestSuite) TestClaimableFailedBondRefundClampsToPayerAmount() {
+	require := s.Require()
+	k := s.disputeKeeper
+	q := keeper.NewQuerier(k)
+	ctx := s.ctx
+
+	fixtures := []struct {
+		name          string
+		id            uint64
+		receiptTotal  math.Int
+		expectedQuery math.Int
+	}{
+		{name: "receipt below payer amount", id: 101, receiptTotal: math.NewInt(999999), expectedQuery: math.NewInt(999999)},
+		{name: "receipt equal to payer amount", id: 102, receiptTotal: math.NewInt(1000000), expectedQuery: math.NewInt(1000000)},
+		{name: "legacy shared receipt above payer amount", id: 103, receiptTotal: math.NewInt(3000000), expectedQuery: math.NewInt(1000000)},
+	}
+
+	for _, fixture := range fixtures {
+		payer := sdk.AccAddress([]byte(fmt.Sprintf("legacy-payer-%d", fixture.id)))
+		dispute := types.Dispute{
+			DisputeId:     fixture.id,
+			DisputeStatus: types.Failed,
+			HashId:        []byte(fmt.Sprintf("legacy-hash-%d", fixture.id)),
+		}
+		require.NoError(k.Disputes.Set(ctx, fixture.id, dispute))
+		require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(fixture.id, payer.Bytes()), types.PayerInfo{
+			Amount:   math.NewInt(1000000),
+			FromBond: true,
+		}))
+		s.reporterKeeper.On("FeePaidFromStakeTotalByPayer", ctx, dispute.HashId, payer).Return(fixture.receiptTotal, nil).Once()
+
+		resp, err := q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+			DisputeId: fixture.id,
+			Address:   payer.String(),
+		})
+		require.NoError(err)
+		require.Equal(fixture.expectedQuery, resp.ClaimableAmount.FeeRefundAmount)
+	}
+}
+
+func (s *KeeperTestSuite) TestClaimableResizedAgainstRefund() {
+	require := s.Require()
+	k := s.disputeKeeper
+	q := keeper.NewQuerier(k)
+	ctx := s.ctx
+	payer := sdk.AccAddress([]byte("resized-against-payer"))
+	dispute := types.Dispute{
+		DisputeId:     104,
+		DisputeStatus: types.Resolved,
+		HashId:        []byte("resized-against-hash"),
+		SlashAmount:   math.NewInt(100),
+		DisputeFee:    math.NewInt(60),
+	}
+	require.NoError(k.Disputes.Set(ctx, dispute.DisputeId, dispute))
+	require.NoError(k.Votes.Set(ctx, dispute.DisputeId, types.Vote{
+		Id:         dispute.DisputeId,
+		VoteResult: types.VoteResult_NO_QUORUM_MAJORITY_AGAINST,
+		Executed:   true,
+	}))
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(dispute.DisputeId, payer.Bytes()), types.PayerInfo{
+		Amount:   math.NewInt(70),
+		FromBond: false,
+	}))
+
+	resp, err := q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: dispute.DisputeId,
+		Address:   payer.String(),
+	})
+	require.NoError(err)
+	require.Equal(math.NewInt(28), resp.ClaimableAmount.FeeRefundAmount)
 }
