@@ -149,6 +149,30 @@ func broadcastAddEvidence(t *testing.T, ctx context.Context, chain *cosmos.Cosmo
 	return nil
 }
 
+// fullFeeFunding is enough loya to fully pay a minor dispute on a validator's report.
+const fullFeeFunding = 300_100_000_000
+
+// proposePaidDispute opens a dispute, pays its whole fee, and returns the dispute id.
+func proposePaidDispute(t *testing.T, ctx context.Context, val e2e.ValidatorInfo, disputer ibc.Wallet, report e2e.MicroReport, category string) uint64 {
+	t.Helper()
+	// a fee above the real one is cut down to the exact amount
+	_, err := val.Node.ExecTx(ctx, disputer.FormattedAddress(),
+		"dispute", "propose-dispute", report.Reporter, report.MetaId, report.QueryID,
+		category, "300000000000loya", "false",
+		"--keyring-dir", val.Node.HomeDir(), "--gas", "1000000", "--fees", "500loya",
+	)
+	require.NoError(t, err)
+	require.NoError(t, testutil.WaitForBlocks(ctx, 1, val.Node))
+
+	disputes := queryDisputes(t, ctx, val.Node)
+	require.Len(t, disputes.Disputes, 1)
+	// evidence is only accepted once the fee is fully paid
+	require.Equal(t, "DISPUTE_STATUS_VOTING", disputes.Disputes[0].Metadata.DisputeStatus)
+	disputeID, err := strconv.ParseUint(disputes.Disputes[0].DisputeID, 10, 64)
+	require.NoError(t, err)
+	return disputeID
+}
+
 func queryDisputes(t *testing.T, ctx context.Context, node *cosmos.ChainNode) e2e.Disputes2 {
 	t.Helper()
 	res, _, err := e2e.QueryWithTimeout(ctx, node, "dispute", "disputes")
@@ -174,30 +198,19 @@ func TestAddEvidence_WarningRejectsAggregate(t *testing.T) {
 	nonAggReport := latestReportForReporter(t, ctx, val0.Node, nonAggReporter.AccAddr, bchQData)
 	require.NotEqual(aggReporter, nonAggReport.Reporter)
 
-	disputer := interchaintest.GetAndFundTestUsers(t, ctx, "add_evidence_disputer", math.NewInt(5_000_000_000), chain)[0]
-	_, err := val0.Node.ExecTx(ctx, disputer.FormattedAddress(),
-		"dispute", "propose-dispute", nonAggReport.Reporter, nonAggReport.MetaId, nonAggReport.QueryID,
-		"warning", "1000000000loya", "false",
-		"--keyring-dir", val0.Node.HomeDir(), "--gas", "1000000", "--fees", "500loya",
-	)
-	require.NoError(err)
-	require.NoError(testutil.WaitForBlocks(ctx, 1, val0.Node))
-
-	disputes := queryDisputes(t, ctx, val0.Node)
-	require.Len(disputes.Disputes, 1)
-	disputeID, err := strconv.ParseUint(disputes.Disputes[0].DisputeID, 10, 64)
-	require.NoError(err)
-
-	// make the disputed reporter the aggregate reporter on a different query
+	// make the reporter the aggregate reporter on a different query before the dispute jails them
 	tipAndSubmit(t, ctx, val0, []e2e.ValidatorInfo{nonAggReporter}, ltcQData)
 	aggEvidence := microReportFromQuery(t, latestReportForReporter(t, ctx, val0.Node, nonAggReporter.AccAddr, ltcQData))
 	require.Equal(nonAggReporter.AccAddr, currentAggregateReporter(t, ctx, val0.Node, ltcQData))
 
-	err = broadcastAddEvidence(t, ctx, chain, disputer, disputeID, aggEvidence)
+	disputer := interchaintest.GetAndFundTestUsers(t, ctx, "add_evidence_disputer", math.NewInt(fullFeeFunding), chain)[0]
+	disputeID := proposePaidDispute(t, ctx, val0, disputer, nonAggReport, "warning")
+
+	err := broadcastAddEvidence(t, ctx, chain, disputer, disputeID, aggEvidence)
 	require.Error(err)
 	require.Contains(err.Error(), "warning disputes cannot add aggregate reports as evidence")
 
-	disputes = queryDisputes(t, ctx, val0.Node)
+	disputes := queryDisputes(t, ctx, val0.Node)
 	require.Len(disputes.Disputes, 1)
 	require.Empty(disputes.Disputes[0].Metadata.AdditionalEvidence)
 }
@@ -216,34 +229,26 @@ func TestAddEvidence_MinorAggregateLimit(t *testing.T) {
 	}
 	nonAggReport := latestReportForReporter(t, ctx, val0.Node, nonAggReporter.AccAddr, bchQData)
 
-	disputer := interchaintest.GetAndFundTestUsers(t, ctx, "add_evidence_minor", math.NewInt(5_000_000_000), chain)[0]
-	_, err := val0.Node.ExecTx(ctx, disputer.FormattedAddress(),
-		"dispute", "propose-dispute", nonAggReport.Reporter, nonAggReport.MetaId, nonAggReport.QueryID,
-		"minor", "1000000000loya", "false",
-		"--keyring-dir", val0.Node.HomeDir(), "--gas", "1000000", "--fees", "500loya",
-	)
+	// the reporter makes both aggregate reports before the dispute jails them
+	// (usdc is not in InitialCycleList; eth/btc/trb are)
+	usdcQData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004757364630000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	tipAndSubmit(t, ctx, val0, []e2e.ValidatorInfo{nonAggReporter}, ltcQData)
+	firstAgg := microReportFromQuery(t, latestReportForReporter(t, ctx, val0.Node, nonAggReporter.AccAddr, ltcQData))
+	tipAndSubmit(t, ctx, val0, []e2e.ValidatorInfo{nonAggReporter}, usdcQData)
+	secondAgg := microReportFromQuery(t, latestReportForReporter(t, ctx, val0.Node, nonAggReporter.AccAddr, usdcQData))
+
+	disputer := interchaintest.GetAndFundTestUsers(t, ctx, "add_evidence_minor", math.NewInt(fullFeeFunding), chain)[0]
+	disputeID := proposePaidDispute(t, ctx, val0, disputer, nonAggReport, "minor")
+
+	// first aggregate evidence is allowed
+	err := broadcastAddEvidence(t, ctx, chain, disputer, disputeID, firstAgg)
 	require.NoError(err)
 	require.NoError(testutil.WaitForBlocks(ctx, 1, val0.Node))
 
 	disputes := queryDisputes(t, ctx, val0.Node)
-	require.Len(disputes.Disputes, 1)
-	disputeID, err := strconv.ParseUint(disputes.Disputes[0].DisputeID, 10, 64)
-	require.NoError(err)
-
-	// first aggregate evidence is allowed
-	tipAndSubmit(t, ctx, val0, []e2e.ValidatorInfo{nonAggReporter}, ltcQData)
-	firstAgg := microReportFromQuery(t, latestReportForReporter(t, ctx, val0.Node, nonAggReporter.AccAddr, ltcQData))
-	err = broadcastAddEvidence(t, ctx, chain, disputer, disputeID, firstAgg)
-	require.NoError(err)
-	require.NoError(testutil.WaitForBlocks(ctx, 1, val0.Node))
-
-	disputes = queryDisputes(t, ctx, val0.Node)
 	require.Len(disputes.Disputes[0].Metadata.AdditionalEvidence, 1)
 
-	// second aggregate evidence is rejected (usdc is not in InitialCycleList; eth/btc/trb are)
-	usdcQData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004757364630000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	tipAndSubmit(t, ctx, val0, []e2e.ValidatorInfo{nonAggReporter}, usdcQData)
-	secondAgg := microReportFromQuery(t, latestReportForReporter(t, ctx, val0.Node, nonAggReporter.AccAddr, usdcQData))
+	// second aggregate evidence is rejected
 	err = broadcastAddEvidence(t, ctx, chain, disputer, disputeID, secondAgg)
 	require.Error(err)
 	require.Contains(err.Error(), "minor disputes can flag at most one aggregate report")

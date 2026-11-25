@@ -16,7 +16,7 @@ This module handles disputes. Disputes can be handles in 3 levels: as a warning,
 ## Tx
 
 ### AddEvidence
-Add microreport evidence to an existing dispute. If any of the evidence reports are an aggregate, flag them.  
+Add microreport evidence to an existing dispute. The dispute fee must be fully paid, and each report must exist on chain. If any of the evidence reports are an aggregate, flag them.  
 - `./layerd tx dispute add-evidence [dispute-id] [reports]`
 
 ### AddFeeToDispute

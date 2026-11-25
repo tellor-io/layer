@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/tellor-io/layer/testutil"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
+	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
@@ -129,7 +131,7 @@ func (s *IntegrationTestSuite) proposeOpenDispute(category types.DisputeCategory
 }
 
 func (s *IntegrationTestSuite) TestAddEvidence_WarningRejectsAggregate() {
-	_, nonAgg, agg1, _, msgServer := s.setupAddEvidenceFixture()
+	reporter, nonAgg, agg1, _, msgServer := s.setupAddEvidenceFixture()
 	disputeID := s.proposeOpenDispute(types.Warning, nonAgg)
 
 	_, err := msgServer.AddEvidence(s.Setup.Ctx, &types.MsgAddEvidence{
@@ -144,20 +146,22 @@ func (s *IntegrationTestSuite) TestAddEvidence_WarningRejectsAggregate() {
 	s.Empty(dispute.AdditionalEvidence)
 
 	// non-aggregate evidence is still allowed
+	otherNonAgg := oracletypes.MicroReport{
+		Reporter:    nonAgg.Reporter,
+		Power:       nonAgg.Power,
+		QueryId:     nonAgg.QueryId,
+		QueryType:   nonAgg.QueryType,
+		Value:       testutil.EncodeValue(9.00),
+		Timestamp:   s.Setup.Ctx.BlockTime().Add(-time.Hour),
+		Cyclelist:   true,
+		BlockNumber: nonAgg.BlockNumber + 10,
+		MetaId:      99,
+	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(otherNonAgg.QueryId, reporter.Bytes(), otherNonAgg.MetaId), otherNonAgg))
 	_, err = msgServer.AddEvidence(s.Setup.Ctx, &types.MsgAddEvidence{
 		CallerAddress: s.newKeysWithTokens().String(),
 		DisputeId:     disputeID,
-		Reports: []*oracletypes.MicroReport{{
-			Reporter:    nonAgg.Reporter,
-			Power:       nonAgg.Power,
-			QueryId:     nonAgg.QueryId,
-			QueryType:   nonAgg.QueryType,
-			Value:       testutil.EncodeValue(9.00),
-			Timestamp:   s.Setup.Ctx.BlockTime().Add(-time.Hour),
-			Cyclelist:   true,
-			BlockNumber: nonAgg.BlockNumber + 10,
-			MetaId:      99,
-		}},
+		Reports:       []*oracletypes.MicroReport{&otherNonAgg},
 	})
 	s.NoError(err)
 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, disputeID)
@@ -227,4 +231,109 @@ func (s *IntegrationTestSuite) TestAddEvidence_WarningProposeOnAggregateStillAll
 	s.NoError(err)
 	s.Equal(types.Warning, dispute.DisputeCategory)
 	s.True(dispute.Open)
+}
+
+// Evidence is refused while the dispute fee is not fully paid, even when the report is real.
+func (s *IntegrationTestSuite) TestAddEvidence_RejectedUntilFeePaid() {
+	_, nonAgg, agg1, _, msgServer := s.setupAddEvidenceFixture()
+
+	// open a major dispute with only the minimum fee, so it still waits for the rest
+	disputer := s.newKeysWithTokens()
+	_, err := msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
+		Creator:          disputer.String(),
+		DisputedReporter: nonAgg.Reporter,
+		ReportMetaId:     nonAgg.MetaId,
+		ReportQueryId:    hex.EncodeToString(nonAgg.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, layertypes.OnePercent),
+		DisputeCategory:  types.Major,
+	})
+	s.NoError(err)
+	dispute, err := s.Setup.Disputekeeper.GetDisputeByReporter(s.Setup.Ctx, nonAgg, types.Major)
+	s.NoError(err)
+	s.True(dispute.Open)
+	s.Equal(types.Prevote, dispute.DisputeStatus)
+
+	_, err = msgServer.AddEvidence(s.Setup.Ctx, &types.MsgAddEvidence{
+		CallerAddress: disputer.String(),
+		DisputeId:     dispute.DisputeId,
+		Reports:       []*oracletypes.MicroReport{&agg1},
+	})
+	s.ErrorIs(err, types.ErrDisputeFeeNotPaid)
+
+	agg, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(agg1.QueryId, uint64(agg1.Timestamp.UnixMilli())))
+	s.NoError(err)
+	s.False(agg.Flagged)
+	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, dispute.DisputeId)
+	s.NoError(err)
+	s.Empty(dispute.AdditionalEvidence)
+}
+
+// Made-up evidence that points at a withdrawal is refused, even on a fully paid dispute.
+func (s *IntegrationTestSuite) TestAddEvidence_CannotFlagWithdrawal() {
+	reporter, nonAgg, _, _, msgServer := s.setupAddEvidenceFixture()
+
+	// the reporter bridges tokens out, which stores a record under their address
+	amount := sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000))
+	s.Setup.MintTokens(reporter, amount.Amount)
+	withdrawalId, err := s.Setup.Bridgekeeper.WithdrawTokens(s.Setup.Ctx, amount, reporter, []byte("1234567890abcdef1234567890abcdef12345678"))
+	s.NoError(err)
+	queryId, _, err := s.Setup.Bridgekeeper.GetWithdrawalQueryId(oraclekeeper.TRBBridgeV2QueryType, withdrawalId)
+	s.NoError(err)
+	aggKey := collections.Join(queryId, uint64(s.Setup.Ctx.BlockTime().UnixMilli()))
+	withdrawal, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, aggKey)
+	s.NoError(err)
+	s.Equal(reporter.String(), withdrawal.AggregateReporter)
+
+	disputeID := s.proposeOpenDispute(types.Minor, nonAgg)
+
+	// no report like this was ever made; it only matches the withdrawal record
+	fake := oracletypes.MicroReport{
+		Reporter:    reporter.String(),
+		QueryId:     queryId,
+		Timestamp:   s.Setup.Ctx.BlockTime(),
+		BlockNumber: withdrawal.MicroHeight,
+	}
+	pointsAtWithdrawal, err := s.Setup.Oraclekeeper.IsAggregateReport(s.Setup.Ctx, fake)
+	s.NoError(err)
+	s.True(pointsAtWithdrawal)
+
+	_, err = msgServer.AddEvidence(s.Setup.Ctx, &types.MsgAddEvidence{
+		CallerAddress: s.newKeysWithTokens().String(),
+		DisputeId:     disputeID,
+		Reports:       []*oracletypes.MicroReport{&fake},
+	})
+	s.ErrorIs(err, types.ErrEvidenceReportDoesNotExist)
+
+	withdrawal, err = s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, aggKey)
+	s.NoError(err)
+	s.False(withdrawal.Flagged)
+}
+
+// The copy stored on chain is what gets saved and flagged, not what the caller sent.
+func (s *IntegrationTestSuite) TestAddEvidence_UsesStoredReport() {
+	_, nonAgg, agg1, _, msgServer := s.setupAddEvidenceFixture()
+	disputeID := s.proposeOpenDispute(types.Minor, nonAgg)
+
+	// same report id as agg1, but the other fields are changed by the caller
+	sent := agg1
+	sent.Value = testutil.EncodeValue(99.00)
+	sent.BlockNumber = agg1.BlockNumber + 50
+	sent.Timestamp = s.Setup.Ctx.BlockTime().Add(time.Minute)
+
+	_, err := msgServer.AddEvidence(s.Setup.Ctx, &types.MsgAddEvidence{
+		CallerAddress: s.newKeysWithTokens().String(),
+		DisputeId:     disputeID,
+		Reports:       []*oracletypes.MicroReport{&sent},
+	})
+	s.NoError(err)
+
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, disputeID)
+	s.NoError(err)
+	s.Len(dispute.AdditionalEvidence, 1)
+	s.Equal(agg1.Value, dispute.AdditionalEvidence[0].Value)
+	s.Equal(agg1.BlockNumber, dispute.AdditionalEvidence[0].BlockNumber)
+
+	agg, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(agg1.QueryId, uint64(agg1.Timestamp.UnixMilli())))
+	s.NoError(err)
+	s.True(agg.Flagged)
 }

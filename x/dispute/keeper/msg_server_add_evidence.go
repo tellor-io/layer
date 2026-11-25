@@ -27,24 +27,40 @@ func (k msgServer) AddEvidence(goCtx context.Context, msg *types.MsgAddEvidence)
 	if !dispute.Open {
 		return nil, errors.New("dispute is not open")
 	}
-	// reporter in additional evidence must be the same as the reporter in the dispute
+	// evidence is only accepted once the dispute fee is fully paid
+	if dispute.DisputeStatus == types.Prevote {
+		return nil, types.ErrDisputeFeeNotPaid
+	}
+	disputedReporter, err := sdk.AccAddressFromBech32(dispute.InitialEvidence.Reporter)
+	if err != nil {
+		return nil, err
+	}
+	// use the reports stored on chain, not the copies the caller sent
+	reports := make([]*oracletypes.MicroReport, 0, len(msg.Reports))
 	for _, report := range msg.Reports {
+		// reporter in additional evidence must be the same as the reporter in the dispute
 		if !strings.EqualFold(report.Reporter, dispute.InitialEvidence.Reporter) {
 			return nil, errors.New("reporter in additional evidence must be the same as the reporter in the dispute")
 		}
-	}
-	// additional evidence must be less than 21 days old
-	for _, report := range msg.Reports {
-		if report.Timestamp.Before(ctx.BlockTime().Add(-21 * 24 * time.Hour)) {
+		stored, exists, err := k.oracleKeeper.ValidateMicroReportExists(ctx, disputedReporter, report.MetaId, report.QueryId)
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			return nil, types.ErrEvidenceReportDoesNotExist
+		}
+		// additional evidence must be less than 21 days old
+		if stored.Timestamp.Before(ctx.BlockTime().Add(-21 * 24 * time.Hour)) {
 			return nil, errors.New("additional evidence must be less than 21 days old")
 		}
+		reports = append(reports, stored)
 	}
 	// enforce category-specific aggregate evidence limits before mutating state
-	if err := k.validateAggregateEvidenceLimits(ctx, dispute, msg.Reports); err != nil {
+	if err := k.validateAggregateEvidenceLimits(ctx, dispute, reports); err != nil {
 		return nil, err
 	}
 	// append submitted evidence to dispute
-	dispute.AdditionalEvidence = append(dispute.AdditionalEvidence, msg.Reports...)
+	dispute.AdditionalEvidence = append(dispute.AdditionalEvidence, reports...)
 	// set updated dispute
 	err = k.Disputes.Set(ctx, msg.DisputeId, dispute)
 	if err != nil {
@@ -52,7 +68,7 @@ func (k msgServer) AddEvidence(goCtx context.Context, msg *types.MsgAddEvidence)
 	}
 
 	// for each microreport evidence, if the reporter is the aggregate reporter, flag it
-	for _, report := range msg.Reports {
+	for _, report := range reports {
 		err := k.oracleKeeper.FlagAggregateReport(ctx, *report)
 		// if error is not nil and not collections.ErrNotFound, return error
 		if err != nil && !errors.Is(err, collections.ErrNotFound) {

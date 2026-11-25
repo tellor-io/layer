@@ -28,4 +28,6 @@ var (
 	ErrVoteCountOverflow           = sdkerrors.Register(ModuleName, 19, "vote count overflow")
 	ErrWarningAggregateEvidence    = sdkerrors.Register(ModuleName, 20, "warning disputes cannot add aggregate reports as evidence")
 	ErrMinorAggregateEvidenceLimit = sdkerrors.Register(ModuleName, 21, "minor disputes can flag at most one aggregate report")
+	ErrEvidenceReportDoesNotExist  = sdkerrors.Register(ModuleName, 22, "evidence report does not exist")
+	ErrDisputeFeeNotPaid           = sdkerrors.Register(ModuleName, 23, "evidence can only be added once the dispute fee is fully paid")
 )
